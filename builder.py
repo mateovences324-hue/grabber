@@ -1,107 +1,124 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, scrolledtext
 import requests
 import json
 import os
 import subprocess
 import sys
 import tempfile
+from urllib.parse import urlparse
 
-class WebhookTesterApp:
+class CookieSessionTester:
     def __init__(self, root):
         self.root = root
-        self.root.title("Discord Webhook Tester - Educational Tool")
-        self.root.geometry("600x400")  # Larger window
+        self.root.title("Educational Cookie & Session Tester")
+        self.root.geometry("700x600")
         self.root.resizable(True, True)
         
-        # Configure grid weights for responsiveness
-        self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_rowconfigure(0, weight=1)
-        
-        # Style configuration
+        self.session = requests.Session()
         self.configure_styles()
         self.create_widgets()
     
     def configure_styles(self):
         style = ttk.Style()
-        style.configure('Large.TButton', font=('Arial', 12, 'bold'), padding=10)
-        style.configure('Medium.TButton', font=('Arial', 10, 'bold'), padding=8)
-        style.configure('Title.TLabel', font=('Arial', 18, 'bold'))
-        style.configure('Subtitle.TLabel', font=('Arial', 10))
+        style.configure('Title.TLabel', font=('Arial', 16, 'bold'))
+        style.configure('Header.TLabel', font=('Arial', 11, 'bold'))
+        style.configure('Large.TButton', font=('Arial', 11), padding=10)
     
     def create_widgets(self):
-        # Main frame with padding
-        main_frame = ttk.Frame(self.root, padding="25")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        main_frame.columnconfigure(0, weight=1)
+        # Main notebook for tabs
+        notebook = ttk.Notebook(self.root)
+        notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Title
-        title_label = ttk.Label(main_frame, text="Discord Webhook Tester", 
-                               style='Title.TLabel',
-                               foreground='#7289DA')
-        title_label.grid(row=0, column=0, pady=(0, 20), sticky=tk.W)
+        # Webhook Testing Tab
+        webhook_frame = ttk.Frame(notebook, padding=10)
+        notebook.add(webhook_frame, text="Webhook Testing")
         
-        subtitle_label = ttk.Label(main_frame, 
-                                  text="Educational Tool for Learning Webhooks & Python GUI Development",
-                                  style='Subtitle.TLabel')
-        subtitle_label.grid(row=1, column=0, pady=(0, 30), sticky=tk.W)
+        # Session Testing Tab
+        session_frame = ttk.Frame(notebook, padding=10)
+        notebook.add(session_frame, text="Session & Cookie Testing")
         
-        # Webhook input section
-        webhook_frame = ttk.LabelFrame(main_frame, text="Webhook Configuration", padding="15")
-        webhook_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 20))
-        webhook_frame.columnconfigure(0, weight=1)
+        self.create_webhook_tab(webhook_frame)
+        self.create_session_tab(session_frame)
+    
+    def create_webhook_tab(self, parent):
+        # Webhook title
+        title_label = ttk.Label(parent, text="Discord Webhook Testing", style='Title.TLabel')
+        title_label.pack(pady=(0, 20))
         
-        webhook_label = ttk.Label(webhook_frame, text="Discord Webhook URL:")
-        webhook_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
+        # Webhook input
+        webhook_frame = ttk.LabelFrame(parent, text="Webhook Configuration", padding=15)
+        webhook_frame.pack(fill=tk.X, pady=(0, 20))
         
-        self.webhook_entry = tk.Entry(webhook_frame, width=70, font=('Arial', 11))
-        self.webhook_entry.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        ttk.Label(webhook_frame, text="Discord Webhook URL:").pack(anchor=tk.W)
         
-        # Test button - LARGER
-        test_btn = ttk.Button(webhook_frame, text="🔍 Test Webhook", 
-                            command=self.test_webhook,
-                            style='Large.TButton')
-        test_btn.grid(row=2, column=0, pady=10)
+        self.webhook_entry = ttk.Entry(webhook_frame, width=80, font=('Arial', 10))
+        self.webhook_entry.pack(fill=tk.X, pady=5)
+        
+        test_btn = ttk.Button(webhook_frame, text="Test Webhook", 
+                            command=self.test_webhook, style='Large.TButton')
+        test_btn.pack(pady=10)
         
         # Build section
-        build_frame = ttk.LabelFrame(main_frame, text="Application Builder", padding="15")
-        build_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 20))
-        build_frame.columnconfigure(0, weight=1)
+        build_frame = ttk.LabelFrame(parent, text="Application Builder", padding=15)
+        build_frame.pack(fill=tk.X, pady=(0, 20))
         
-        build_label = ttk.Label(build_frame, text="Create standalone executable:")
-        build_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
+        ttk.Label(build_frame, text="Create standalone executable:").pack(anchor=tk.W)
         
-        # Build button - LARGER
-        build_btn = ttk.Button(build_frame, text="🛠️ Build EXE", 
-                             command=self.build_exe,
-                             style='Large.TButton')
-        build_btn.grid(row=1, column=0, pady=10)
+        build_btn = ttk.Button(build_frame, text="Build EXE", 
+                             command=self.build_exe, style='Large.TButton')
+        build_btn.pack(pady=10)
         
-        # Status section
-        status_frame = ttk.Frame(main_frame)
-        status_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=20)
-        status_frame.columnconfigure(0, weight=1)
+        # Status
+        self.status_label = ttk.Label(parent, text="Ready", font=('Arial', 10))
+        self.status_label.pack(pady=10)
         
-        self.status_label = ttk.Label(status_frame, text="Ready to test webhooks and build executables", 
-                                     font=('Arial', 10),
-                                     foreground='#43B581')
-        self.status_label.grid(row=0, column=0, sticky=tk.W)
+        self.progress = ttk.Progressbar(parent, mode='indeterminate')
+        self.progress.pack(fill=tk.X, pady=5)
+    
+    def create_session_tab(self, parent):
+        # Session testing title
+        title_label = ttk.Label(parent, text="Educational Session & Cookie Testing", style='Title.TLabel')
+        title_label.pack(pady=(0, 20))
         
-        # Progress bar
-        self.progress = ttk.Progressbar(status_frame, mode='indeterminate')
-        self.progress.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(5, 0))
+        # URL input
+        url_frame = ttk.LabelFrame(parent, text="Website Testing", padding=15)
+        url_frame.pack(fill=tk.X, pady=(0, 15))
         
-        # Educational disclaimer
-        disclaimer_frame = ttk.Frame(main_frame)
-        disclaimer_frame.grid(row=5, column=0, sticky=(tk.W, tk.E))
-        disclaimer_frame.columnconfigure(0, weight=1)
+        ttk.Label(url_frame, text="Website URL (for educational testing):").pack(anchor=tk.W)
         
-        disclaimer = ttk.Label(disclaimer_frame, 
-                             text="For educational purposes only - Webhook Testing & Python Learning",
-                             font=('Arial', 9),
-                             foreground='#72767D',
-                             justify=tk.CENTER)
-        disclaimer.grid(row=0, column=0, pady=10)
+        self.site_entry = ttk.Entry(url_frame, width=80, font=('Arial', 10))
+        self.site_entry.pack(fill=tk.X, pady=5)
+        self.site_entry.insert(0, "https://httpbin.org/cookies")  # Educational API
+        
+        # Buttons
+        btn_frame = ttk.Frame(url_frame)
+        btn_frame.pack(fill=tk.X, pady=10)
+        
+        ttk.Button(btn_frame, text="Test Connection", 
+                  command=self.test_connection).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(btn_frame, text="View Cookies", 
+                  command=self.view_cookies).pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(btn_frame, text="Clear Session", 
+                  command=self.clear_session).pack(side=tk.LEFT)
+        
+        # Results area
+        results_frame = ttk.LabelFrame(parent, text="Session Information", padding=15)
+        results_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        
+        self.results_text = scrolledtext.ScrolledText(results_frame, height=15, font=('Consolas', 9))
+        self.results_text.pack(fill=tk.BOTH, expand=True)
+        
+        # Educational info
+        info_frame = ttk.LabelFrame(parent, text="Educational Purpose", padding=10)
+        info_frame.pack(fill=tk.X)
+        
+        info_text = (
+            "This tool demonstrates how HTTP sessions and cookies work for educational purposes.\n"
+            "It shows how websites use cookies to maintain state between requests.\n"
+            "Use this to learn about web development, APIs, and HTTP protocols."
+        )
+        ttk.Label(info_frame, text=info_text, wraplength=650, justify=tk.LEFT).pack(anchor=tk.W)
     
     def test_webhook(self):
         webhook_url = self.webhook_entry.get().strip()
@@ -110,59 +127,90 @@ class WebhookTesterApp:
             messagebox.showerror("Error", "Please enter a webhook URL")
             return
         
-        if not webhook_url.startswith('https://discord.com/api/webhooks/'):
-            messagebox.showerror("Error", "Please enter a valid Discord webhook URL")
-            return
-        
-        self.status_label.config(text="Testing webhook...", foreground='#FAA61A')
+        self.status_label.config(text="Testing webhook...")
         self.progress.start()
-        self.root.update()
         
         try:
-            # Create test message
             data = {
-                "content": "Webhook Test Successful! 🎉",
-                "embeds": [
-                    {
-                        "title": "Educational Webhook Test",
-                        "description": "This is a test message from the Python Webhook Tester",
-                        "color": 5814783,
-                        "fields": [
-                            {
-                                "name": "Status",
-                                "value": "✅ Working perfectly!",
-                                "inline": True
-                            },
-                            {
-                                "name": "Purpose",
-                                "value": "Educational Python Project",
-                                "inline": True
-                            }
-                        ],
-                        "footer": {
-                            "text": "Made for learning webhooks & GUI development"
-                        }
-                    }
-                ]
+                "embeds": [{
+                    "title": "Educational Webhook Test",
+                    "description": "This demonstrates webhook functionality for learning Python and HTTP requests",
+                    "color": 5814783,
+                    "fields": [
+                        {"name": "Status", "value": "✅ Working!", "inline": True},
+                        {"name": "Purpose", "value": "Python Education", "inline": True}
+                    ]
+                }]
             }
             
             response = requests.post(webhook_url, json=data, timeout=10)
             
             if response.status_code == 204:
-                self.status_label.config(text="✅ Webhook test successful! Ready to build EXE.", foreground='#43B581')
-                messagebox.showinfo("Success", "Webhook test successful! Check your Discord channel.\n\nYou can now build the EXE file.")
+                self.status_label.config(text="✅ Webhook test successful!")
+                messagebox.showinfo("Success", "Webhook test successful! Check your Discord.")
             else:
-                self.status_label.config(text="❌ Webhook test failed - Check URL", foreground='#F04747')
-                messagebox.showerror("Error", f"Webhook test failed. Status code: {response.status_code}\n\nPlease check your webhook URL.")
+                self.status_label.config(text="❌ Webhook test failed")
+                messagebox.showerror("Error", f"Webhook test failed. Status: {response.status_code}")
                 
-        except requests.exceptions.RequestException as e:
-            self.status_label.config(text="❌ Connection error - Check internet", foreground='#F04747')
-            messagebox.showerror("Error", f"Failed to connect: {str(e)}\n\nPlease check your internet connection and webhook URL.")
         except Exception as e:
-            self.status_label.config(text="❌ Unexpected error occurred", foreground='#F04747')
-            messagebox.showerror("Error", f"An unexpected error occurred: {str(e)}")
+            self.status_label.config(text="❌ Error testing webhook")
+            messagebox.showerror("Error", f"Failed to test webhook: {str(e)}")
         finally:
             self.progress.stop()
+    
+    def test_connection(self):
+        url = self.site_entry.get().strip()
+        if not url:
+            messagebox.showerror("Error", "Please enter a URL")
+            return
+        
+        try:
+            self.results_text.delete(1.0, tk.END)
+            self.results_text.insert(tk.END, f"Testing connection to: {url}\n")
+            self.results_text.insert(tk.END, "="*50 + "\n\n")
+            
+            response = self.session.get(url, timeout=10)
+            
+            # Display response info
+            self.results_text.insert(tk.END, f"Status Code: {response.status_code}\n")
+            self.results_text.insert(tk.END, f"Content Type: {response.headers.get('content-type', 'Unknown')}\n\n")
+            
+            # Display cookies
+            cookies = self.session.cookies.get_dict()
+            if cookies:
+                self.results_text.insert(tk.END, "Cookies in session:\n")
+                for name, value in cookies.items():
+                    self.results_text.insert(tk.END, f"  {name}: {value}\n")
+            else:
+                self.results_text.insert(tk.END, "No cookies in session\n")
+            
+            self.results_text.insert(tk.END, "\n" + "="*50 + "\n")
+            
+        except Exception as e:
+            self.results_text.insert(tk.END, f"Error: {str(e)}\n")
+    
+    def view_cookies(self):
+        self.results_text.delete(1.0, tk.END)
+        cookies = self.session.cookies.get_dict()
+        
+        if not cookies:
+            self.results_text.insert(tk.END, "No cookies in current session\n")
+            return
+        
+        self.results_text.insert(tk.END, "Current Session Cookies:\n")
+        self.results_text.insert(tk.END, "="*50 + "\n\n")
+        
+        for name, value in cookies.items():
+            self.results_text.insert(tk.END, f"Cookie: {name}\n")
+            self.results_text.insert(tk.END, f"Value: {value}\n")
+            self.results_text.insert(tk.END, f"Domain: {self.session.cookies.list_domains()}\n")
+            self.results_text.insert(tk.END, "-" * 30 + "\n")
+    
+    def clear_session(self):
+        self.session = requests.Session()
+        self.results_text.delete(1.0, tk.END)
+        self.results_text.insert(tk.END, "Session cleared - new session created\n")
+        messagebox.showinfo("Success", "Session cleared successfully")
     
     def build_exe(self):
         webhook_url = self.webhook_entry.get().strip()
@@ -171,81 +219,51 @@ class WebhookTesterApp:
             messagebox.showerror("Error", "Please enter a webhook URL first")
             return
         
-        if not webhook_url.startswith('https://discord.com/api/webhooks/'):
-            messagebox.showerror("Error", "Please enter a valid Discord webhook URL")
-            return
-        
-        self.status_label.config(text="Building executable... This may take a minute.", foreground='#FAA61A')
+        self.status_label.config(text="Building executable...")
         self.progress.start()
-        self.root.update()
         
         try:
-            # Create the client script
             client_script = self.create_client_script(webhook_url)
             
-            # Save to temporary file
             with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
                 f.write(client_script)
                 temp_script_path = f.name
             
-            # Ask for save location
             output_path = filedialog.asksaveasfilename(
                 defaultextension=".exe",
-                filetypes=[("Executable files", "*.exe"), ("All files", "*.*")],
+                filetypes=[("Executable files", "*.exe")],
                 title="Save EXE file as",
                 initialfile="WebhookDemo.exe"
             )
             
             if not output_path:
                 os.unlink(temp_script_path)
-                self.status_label.config(text="Build cancelled", foreground='#72767D')
+                self.status_label.config(text="Build cancelled")
                 self.progress.stop()
                 return
             
-            # Update status
-            self.status_label.config(text="Compiling with PyInstaller... This may take a while.", foreground='#FAA61A')
+            self.status_label.config(text="Compiling... This may take a minute.")
             self.root.update()
             
-            # Get the directory and filename for output
-            output_dir = os.path.dirname(output_path)
-            output_name = os.path.basename(output_path).replace('.exe', '')
-            
             # Build with PyInstaller
-            result = subprocess.run([
+            subprocess.run([
                 sys.executable, '-m', 'PyInstaller',
                 '--onefile',
                 '--windowed',
-                '--name', output_name,
-                '--distpath', output_dir,
-                '--workpath', os.path.join(tempfile.gettempdir(), 'pyinstaller'),
+                '--name', os.path.basename(output_path).replace('.exe', ''),
                 temp_script_path
-            ], capture_output=True, text=True, timeout=120)
+            ], check=True, timeout=120)
             
-            # Clean up
             os.unlink(temp_script_path)
+            self.status_label.config(text="✅ EXE built successfully!")
+            messagebox.showinfo("Success", "Executable built successfully! Check the 'dist' folder.")
             
-            if result.returncode == 0:
-                self.status_label.config(text="✅ EXE built successfully! Check your selected folder.", foreground='#43B581')
-                messagebox.showinfo("Success", 
-                                  f"Executable built successfully!\\n\\n"
-                                  f"File saved to: {output_path}\\n\\n"
-                                  f"You can now distribute the EXE file.")
-            else:
-                self.status_label.config(text="❌ Build failed - Check PyInstaller", foreground='#F04747')
-                messagebox.showerror("Error", 
-                                   f"Failed to build executable.\\n\\n"
-                                   f"Error: {result.stderr}\\n\\n"
-                                   f"Make sure PyInstaller is installed: pip install pyinstaller")
-                
-        except subprocess.TimeoutExpired:
-            self.status_label.config(text="❌ Build timeout - Try again", foreground='#F04747')
-            messagebox.showerror("Error", "Build process timed out. Please try again.")
         except Exception as e:
-            self.status_label.config(text="❌ Build error occurred", foreground='#F04747')
+            self.status_label.config(text="❌ Build failed")
             messagebox.showerror("Error", f"Build failed: {str(e)}")
         finally:
             self.progress.stop()
-
+    
     def create_client_script(self, webhook_url):
         return f'''import requests
 import tkinter as tk
@@ -258,47 +276,39 @@ def get_system_info():
     try:
         hostname = socket.gethostname()
         system = platform.system()
-        version = platform.version()
-        
         return f"""
-**System Information (Educational):**
-- Computer Name: {{hostname}}
-- Operating System: {{system}}
-- Version: {{version}}
+**Educational System Info:**
+- Computer: {{hostname}}
+- OS: {{system}}
 
-*This application demonstrates webhook functionality for educational purposes.*
+*This demonstrates webhook functionality for learning Python.*
 """
     except:
-        return "**System information unavailable**\\\\n*This application demonstrates webhook functionality for educational purposes.*"
+        return "**System info unavailable**\\\\n*Educational webhook demonstration.*"
 
-def send_webhook_message():
-    """Send a message to the Discord webhook"""
+def send_webhook():
+    """Send educational webhook message"""
     try:
         system_info = get_system_info()
         
         data = {{
-            "embeds": [
-                {{
-                    "title": "🎓 Educational Webhook Demo",
-                    "description": "This is a demonstration of webhook functionality for learning purposes.\\\\n\\\\n" + system_info,
-                    "color": 3447003,
-                    "fields": [
-                        {{
-                            "name": "Purpose",
-                            "value": "Python Education & Webhook Learning",
-                            "inline": True
-                        }},
-                        {{
-                            "name": "Status",
-                            "value": "Demo Completed Successfully",
-                            "inline": True
-                        }}
-                    ],
-                    "footer": {{
-                        "text": "Educational Project - Webhook Demonstrator"
+            "embeds": [{{
+                "title": "🎓 Python Learning Demo",
+                "description": "This demonstrates webhook integration for educational purposes.\\\\n\\\\n" + system_info,
+                "color": 3447003,
+                "fields": [
+                    {{
+                        "name": "Purpose",
+                        "value": "Learning Python & Webhooks",
+                        "inline": True
+                    }},
+                    {{
+                        "name": "Status", 
+                        "value": "Demo Completed",
+                        "inline": True
                     }}
-                }}
-            ]
+                ]
+            }}]
         }}
         
         response = requests.post("{webhook_url}", json=data, timeout=10)
@@ -306,51 +316,41 @@ def send_webhook_message():
         if response.status_code == 204:
             messagebox.showinfo("Success", 
                               "✅ Educational demo completed!\\\\n\\\\n"
-                              "This demonstrates how webhooks work for learning purposes.\\\\n"
-                              "Check your Discord channel to see the message.")
+                              "This shows how webhooks work in Python.\\\\n"
+                              "Check your Discord to see the message.")
         else:
-            messagebox.showerror("Error", 
-                               "Webhook demo failed.\\\\n"
-                               "This might be because the webhook URL is invalid or expired.")
+            messagebox.showerror("Error", "Webhook demo failed - check URL")
                                
     except Exception as e:
-        messagebox.showerror("Error", 
-                           f"Failed to send demo message: {{str(e)}}\\\\n\\\\n"
-                           "This demonstrates error handling in Python applications.")
+        messagebox.showerror("Error", f"Demo failed: {{str(e)}}")
 
 def main():
-    # Create GUI
     root = tk.Tk()
     root.title("Webhook Educational Demo")
-    root.geometry("500x300")  # Larger window
-    root.resizable(False, False)
-    
-    # Configure style
+    root.geometry("500x300")
     root.configure(bg='#2C2F33')
     
-    # Create widgets
-    title_label = tk.Label(root, text="🎓 Webhook Educational Demo", 
+    title_label = tk.Label(root, text="🎓 Webhook Learning Demo", 
                           font=('Arial', 16, 'bold'),
                           fg='#7289DA', bg='#2C2F33')
     title_label.pack(pady=30)
     
     description = tk.Label(root, 
-                         text="This application demonstrates how webhooks work\\\\n"
-                              "for educational purposes in Python programming.\\\\n\\\\n"
-                              "Click the button below to run the demo:",
+                         text="This demonstrates webhook functionality\\\\n"
+                              "for learning Python programming.",
                          font=('Arial', 11),
                          fg='white', bg='#2C2F33')
     description.pack(pady=20)
     
-    demo_btn = tk.Button(root, text="🚀 Run Educational Demo",
-                        command=send_webhook_message,
+    demo_btn = tk.Button(root, text="🚀 Run Learning Demo",
+                        command=send_webhook,
                         bg='#7289DA', fg='white',
                         font=('Arial', 12, 'bold'),
-                        width=25, height=2)
+                        width=20, height=2)
     demo_btn.pack(pady=30)
     
     disclaimer = tk.Label(root, 
-                        text="For educational purposes only - Learning webhooks & Python",
+                        text="For educational purposes - Learning Python & web development",
                         font=('Arial', 9),
                         fg='#72767D', bg='#2C2F33')
     disclaimer.pack(side=tk.BOTTOM, pady=15)
@@ -363,5 +363,5 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = WebhookTesterApp(root)
+    app = CookieSessionTester(root)
     root.mainloop()

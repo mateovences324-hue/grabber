@@ -16,12 +16,6 @@ class WebhookTool:
         self.root.resizable(False, False)
         self.root.configure(bg='#0a0a0a')
         
-        # Set window icon (you can replace this with your own .ico file)
-        try:
-            self.root.iconbitmap('icon.ico')  # You'll need to add an icon file
-        except:
-            pass
-        
         self.configure_styles()
         self.create_widgets()
     
@@ -72,8 +66,8 @@ class WebhookTool:
         
         ttk.Label(webhook_frame, text="Discord Webhook URL:", style='Header.TLabel').pack(anchor=tk.W)
         
-        # Custom entry field
-        self.webhook_entry = tk.Entry(webhook_entry, width=70, font=('Arial', 10),
+        # Custom entry field - FIXED THIS LINE
+        self.webhook_entry = tk.Entry(webhook_frame, width=70, font=('Arial', 10),
                                      bg='#1a1a1a', fg='#00ff00', insertbackground='#00ff00',
                                      relief='solid', bd=2)
         self.webhook_entry.pack(fill=tk.X, pady=10, ipady=5)

